@@ -1,0 +1,9 @@
+﻿21feb2011
+Added command line parsing for
+-session=
+-importdir=
+-importpattern=
+
+Examples:
+-session="C:\Users\mf\Documents\flashcards-test\mandarin-test.flashcards.xml"
+-importdir="C:\Users\mf\Documents\Visual Studio 2010\Projects\flashcarder\Data\Mandarin 1 Vocabulary\word\media"
