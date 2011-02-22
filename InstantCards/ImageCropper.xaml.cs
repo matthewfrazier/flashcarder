@@ -162,22 +162,26 @@ namespace Protomeme
 
 			if (this.imageToCrop.Source != null)
 			{
-				double imageWidth = this.imageToCrop.Source.Width;
-				double imageHeight = this.imageToCrop.Source.Height;
+				var bs = this.imageToCrop.Source as BitmapSource;
+				if (bs != null)
+				{
+					double imageWidth = bs.PixelWidth;
+					double imageHeight = bs.PixelHeight;
 
-				double xscale = ca.ActualWidth / imageWidth;
-				double yscale = ca.ActualHeight / imageHeight;
+					double xscale = imageWidth / ca.ActualWidth;
+					double yscale = imageHeight / ca.ActualHeight;
 
-				int newLeft = (int)Math.Round(rc.Left * xscale);
-				int newTop = (int)Math.Round(rc.Top * yscale);
-				int newWidth = (int)Math.Round(rc.Width * xscale);
-				int newHeight = (int)Math.Round(rc.Height * yscale);
-				this.CroppedImageBounds = new Int32Rect(
-					newLeft,
-					newTop,
-					newWidth,
-					newHeight
-					);
+					int newLeft = (int)Math.Round(rc.Left * xscale);
+					int newTop = (int)Math.Round(rc.Top * yscale);
+					int newWidth = (int)Math.Round(rc.Width * xscale);
+					int newHeight = (int)Math.Round(rc.Height * yscale);
+					this.CroppedImageBounds = new Int32Rect(
+						newLeft,
+						newTop,
+						newWidth,
+						newHeight
+						);
+				}
 			}
 		}
 

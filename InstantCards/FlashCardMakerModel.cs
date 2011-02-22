@@ -11,25 +11,25 @@ using System.Xml.Serialization;
 
 namespace Protomeme
 {
-	public class FlashCardMakerViewModel: INotifyPropertyChanged
+	public class FlashCardMakerViewModel : INotifyPropertyChanged
 	{
-		
+
 		public FlashCardMakerViewModel()
 		{
 			this.ErrorCollector = new BoundErrorCollector();
-	
+
 			this.PropertyChanged += new PropertyChangedEventHandler(FlashCardMakerViewModel_PropertyChanged);
 		}
 
 		System.Xml.Serialization.XmlSerializer xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(FlashCardSession));
 
-		public class BoundErrorCollector: 
-			ObservableCollection<KeyValuePair<object,Exception>>,
+		public class BoundErrorCollector :
+			ObservableCollection<KeyValuePair<object, Exception>>,
 			IErrorCollector
 		{
 		}
 
-		public class TaggedRegion:
+		public class TaggedRegion :
 			INotifyPropertyChanged
 		{
 			#region INotifyPropertyChanged
@@ -195,7 +195,7 @@ namespace Protomeme
 			switch (e.PropertyName)
 			{
 				case "SelectedSourceImage":
-					if (this.SelectedSourceImage== null)
+					if (this.SelectedSourceImage == null)
 					{
 						this.SelectedTaggedRegion = null;
 					}
@@ -223,7 +223,7 @@ namespace Protomeme
 			}
 		}
 
-		public class FlashCardSession: INotifyPropertyChanged
+		public class FlashCardSession : INotifyPropertyChanged
 		{
 			#region INotifyPropertyChanged
 
@@ -554,12 +554,12 @@ namespace Protomeme
 				if (this.ViewModel.SourceImages == null)
 					this.ViewModel.SourceImages = new ObservableCollection<SourceImage>();
 
-				
+
 			}
 
 			#region Errors (INotifyPropertyChanged Property)
-			private ObservableCollection<KeyValuePair<string,Exception>> _Errors;
-			public ObservableCollection<KeyValuePair<string,Exception>> Errors
+			private ObservableCollection<KeyValuePair<string, Exception>> _Errors;
+			public ObservableCollection<KeyValuePair<string, Exception>> Errors
 			{
 				get { return this._Errors; }
 				set
@@ -575,7 +575,7 @@ namespace Protomeme
 
 			public void LoadSourceImagesFromFiles(IEnumerable<string> paths)
 			{
-				this.Errors = new ObservableCollection<KeyValuePair<string,Exception>>();
+				this.Errors = new ObservableCollection<KeyValuePair<string, Exception>>();
 				if (this.ViewModel.SourceImages == null)
 					this.ViewModel.SourceImages = new ObservableCollection<SourceImage>();
 				foreach (string path in paths)
@@ -585,13 +585,13 @@ namespace Protomeme
 						this.ViewModel.SourceImages.Add(
 							new SourceImage()
 							{
-								 ImageUrl = path,
-								 Title = System.IO.Path.GetFileNameWithoutExtension(path)
+								ImageUrl = path,
+								Title = System.IO.Path.GetFileNameWithoutExtension(path)
 							});
 					}
 					catch (Exception ex)
 					{
-						this.Errors.Add(new KeyValuePair<string,Exception>(
+						this.Errors.Add(new KeyValuePair<string, Exception>(
 							path, ex));
 					}
 				}
@@ -757,41 +757,61 @@ namespace Protomeme
 			public override void Execute(object parameter)
 			{
 				var path = parameter as string;
-				if (String.IsNullOrEmpty(path))
+				try
 				{
+					if (String.IsNullOrEmpty(path))
+					{
 						var sfd = new Microsoft.Win32.SaveFileDialog();
-						sfd .Title = "Export Flash Cards";
-						sfd .Filter = @"HTML(*.htm)|*.htm";
+						sfd.Title = "Export Flash Cards";
+						sfd.Filter = @"HTML(*.htm)|*.htm";
 						var result = sfd.ShowDialog();
 						if (result == null || !result.Value)
 							return;
 						path = sfd.FileName;
-				}
-				foreach (var si in this.ViewModel.Session.SourceImages)
-				{
-					foreach (var tr in si.TaggedRegions)
+					}
+					foreach (var si in this.ViewModel.Session.SourceImages)
 					{
-						//HACK: this will stomp multiple regions with the same tag
-						var trpath =
-							System.IO.Path.Combine(
-								System.IO.Path.GetDirectoryName(path),
-								System.IO.Path.ChangeExtension(
-									System.IO.Path.GetFileName(si.ImageUrl),
-									String.Format("-{0}.png",tr.Tag)));
-						//load the image so we can explicitly crop it rather than using the in-memory version
-						var image = new BitmapImage(new Uri(si.ImageUrl));
-						//crop to a rounded representation of the rect
-						var cropped = new CroppedBitmap(
-							image,
-							tr.Region);
-						var enc = new PngBitmapEncoder();
-						enc.Frames.Add(BitmapFrame.Create(image));
-						using (var fs = System.IO.File.Create(
-							trpath))
+						foreach (var tr in si.TaggedRegions)
 						{
-							enc.Save(fs);
+							if (tr.Region == Int32Rect.Empty)
+								continue;
+							//HACK: this will stomp multiple regions with the same tag
+							var trpath =
+								System.IO.Path.Combine(
+									System.IO.Path.GetDirectoryName(path),
+									System.IO.Path.ChangeExtension(
+										System.IO.Path.GetFileName(si.ImageUrl),
+										String.Format("-{0}.png", tr.Tag)));
+							//load the image so we can explicitly crop it rather than using the in-memory version
+							var image = new BitmapImage(new Uri(si.ImageUrl));
+							//crop to a rounded representation of the rect
+							var cropped = new CroppedBitmap(
+								image,
+								tr.Region);
+							var enc = new PngBitmapEncoder();
+							enc.Frames.Add(BitmapFrame.Create(cropped));
+							try
+							{
+								using (var fs = System.IO.File.Create(
+									trpath))
+								{
+									enc.Save(fs);
+								}
+								tr.ImageUrl = trpath;
+							}
+							catch (Exception fsex)
+							{
+								this.ViewModel.ErrorCollector.Add(new KeyValuePair<object, Exception>(
+									trpath, fsex));
+
+							}
 						}
 					}
+				}
+				catch (Exception ex)
+				{
+					this.ViewModel.ErrorCollector.Add(new KeyValuePair<object, Exception>(
+						path, ex));
 				}
 			}
 		}
@@ -813,7 +833,7 @@ namespace Protomeme
 		/// An image that can be tagged with regions that represent parts of
 		/// one or more flash cards
 		/// </summary>
-		public class SourceImage: INotifyPropertyChanged
+		public class SourceImage : INotifyPropertyChanged
 		{
 			#region INotifyPropertyChanged
 
@@ -922,7 +942,7 @@ namespace Protomeme
 			}
 			#endregion
 
-			
+
 		}
 	}
 }

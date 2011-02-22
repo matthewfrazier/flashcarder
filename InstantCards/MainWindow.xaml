@@ -27,70 +27,87 @@
 				<RowDefinition Height="350"/>
 			</Grid.RowDefinitions>
 
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="340" MinWidth="120"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			
+			<GridSplitter Grid.Column="1"
+						  Grid.RowSpan="2"
+						  Width="5"
+						  
+						  VerticalAlignment="Stretch"
+						  HorizontalAlignment="Left"/>
+			
 			<DockPanel
-                Grid.Row="0">
+                Grid.Row="0"
+				Grid.RowSpan="2"
+				Grid.Column="0">
 				<ListView 
                   x:Name="sourceImageListView"
                       ItemsSource="{Binding SourceImages}"
                 SelectedItem="{Binding SelectedSourceImage}"
                 >
-					<ListView.ItemTemplate>
-						<DataTemplate
-                    >
-							<StackPanel Orientation="Horizontal"
-                                Margin="4,4,4,4"
-                                >
-								<Image 
-                            Source="{Binding ImageUrl}" 
-                            ToolTip="{Binding Title}"
-                            MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ScrollContentPresenter}}}"
-                                MaxHeight="60"
-                            />
-								
-								<StackPanel Orientation="Vertical" HorizontalAlignment="Right"
-											Width="120"
-											Height="60"
-											Background="Yellow">
-									<Label Content="{Binding TaggedRegions.Count}"/>
-								</StackPanel>
-							</StackPanel>
-
-						</DataTemplate>
-					</ListView.ItemTemplate>
+					<ListView.View>
+						<GridView>
+							<GridViewColumn Header="Source Image"
+											Width="auto">
+								<GridViewColumn.CellTemplate>
+									<DataTemplate>
+										<Image 
+								Source="{Binding ImageUrl}" 
+								ToolTip="{Binding Title}"
+								MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ScrollContentPresenter}}}"
+								MaxHeight="40"
+								/>
+									</DataTemplate>
+								</GridViewColumn.CellTemplate>
+							</GridViewColumn>
+							<GridViewColumn Header="Regions"
+											Width="auto"
+											DisplayMemberBinding="{Binding TaggedRegions.Count}">
+							</GridViewColumn>
+						</GridView>
+					</ListView.View>
 				</ListView>
 			</DockPanel>
 
-			<GridSplitter Grid.Row="0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="5"/>
-
 			<Grid
-				Grid.Row="1"
+				Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
 				>
 				<Grid.RowDefinitions>
-					<RowDefinition Height="25"/>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="240"/>
+					<RowDefinition Height="300"/>
+					<RowDefinition Height="40"/>
+					<RowDefinition MinHeight="150" Height="*"/>
 				</Grid.RowDefinitions>
-				<TextBlock Grid.Row="0"
+				
+				<TextBlock Grid.Row="1"
 						   Margin="4,4,4,4"
 						   >
-					
-					(Original image is <TextBlock Text="{Binding ElementName=imageCropper,Path=Source.Width}"/>, <TextBlock Text="{Binding ElementName=imageCropper,Path=Source.Height}"/>. Cropped bounds 
-					<TextBox Margin="2,2,2,2" Text="{Binding SelectedTaggedRegion.Region}"/>)
-					
-					Highlight the '<TextBlock Text="{Binding SelectedTaggedRegion.Tag}"/>' region.</TextBlock>
+					<TextBox Margin="2,2,2,2" Width="auto" Height="40" Text="{Binding SelectedTaggedRegion.Region}"/>
+					<LineBreak/>
+					Highlight the region for '<TextBlock Text="{Binding SelectedTaggedRegion.Tag}"/>'.</TextBlock>
 
 				<local:ImageCropper
 					x:Name="imageCropper"
-					Grid.Row="1"
+					Grid.Row="2"
 					Source="{Binding SelectedSourceImage.ImageUrl}"
 					CroppedImageBounds="{Binding SelectedTaggedRegion.Region,Mode=TwoWay}"
                     MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}"
 					/>
 
+				<GridSplitter
+					Grid.Row="0"
+					VerticalAlignment="Bottom"
+					Height="5"
+					HorizontalAlignment="Stretch"/>
+
+
 				<ListView
-					Grid.Row="2"
+					Grid.Row="0"
                     ItemsSource="{Binding SelectedSourceImage.TaggedRegions}"
                     SelectedItem="{Binding SelectedTaggedRegion}"
+					Margin="8,8,8,8"
 					>
 					<ListView.ItemsPanel>
 						<ItemsPanelTemplate>
@@ -102,9 +119,11 @@
 					</ListView.ItemsPanel>
 					<ListView.ItemTemplate>
 						<DataTemplate>
-								<DockPanel
+							<DockPanel
                                 HorizontalAlignment="Stretch"
-                                Width="320"
+                                MaxWidth="600"
+								MinHeight="200"
+								MinWidth="320"
                                 MaxHeight="200">
 								<TextBlock DockPanel.Dock="Top">
                                    <Label Content="{Binding Tag}"
@@ -112,17 +131,17 @@
                                    <TextBox HorizontalAlignment="Right"
                                            Text="{Binding Region}"
                                            />
-									</TextBlock>
+								</TextBlock>
 
 								<Border BorderBrush="LightGray" BorderThickness="4" CornerRadius="4" Padding="5,5,5,5" Margin="4,4,4,4">
-								<Image Source="{Binding Image}"
+									<Image Source="{Binding ImageUrl}"
 									   HorizontalAlignment="Stretch"
 									   Width="320"
                                        Stretch="Uniform"/>
 								</Border>
 
 							</DockPanel>
-							
+
 						</DataTemplate>
 					</ListView.ItemTemplate>
 				</ListView>
