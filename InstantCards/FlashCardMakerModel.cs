@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Xml.Serialization;
+using System.Windows.Documents;
 
 namespace Protomeme
 {
@@ -31,12 +32,20 @@ namespace Protomeme
 			protected override void OnCollectionChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
 			{
 				base.OnCollectionChanged(e);
-				var summary = String.Format("{0}: {1}", this[0].Key, this[0].Value);
-				if (this.Count > 1)
-					summary += String.Format(" ({0} total errors)", this.Count);
-				this.ShortErrorSummary = summary;
+				var ha = this.Count > 0;
+				if (ha)
+				{
+					var summary = String.Format("{0}: {1}", this[0].Key, this[0].Value.Message);
+					if (this.Count > 1)
+						summary += String.Format(" ({0} total errors)", this.Count);
+					this.ShortErrorSummary = summary;
+				}
+				else
+				{
+					this.ShortErrorSummary = null;
+				}
+				this.HasErrors = ha;
 
-				this.HasErrors = this.Count > 0;
 			}
 			#region INotifyPropertyChanged
 
@@ -712,6 +721,21 @@ namespace Protomeme
 
 			#endregion
 
+			#region Description (INotifyPropertyChanged Property)
+			private string _Description;
+			public string Description
+			{
+				get { return this._Description; }
+				set
+				{
+					if (value == _Description)
+						return;
+
+					this._Description = value;
+					this.OnPropertyChanged("Description");
+				}
+			}
+			#endregion
 			public FlashCardMakerViewModelCommandBase(FlashCardMakerViewModel viewModel)
 			{
 				this._viewModel = viewModel;
@@ -875,7 +899,7 @@ namespace Protomeme
 							return;
 						path = saveDialog.FileName;
 					}
-
+					this.Description = String.Format("Saving {0}", path);
 					var session = this.ViewModel.Session;
 					if (session == null)
 					{
@@ -889,6 +913,8 @@ namespace Protomeme
 					session.SessionPath = path; 
 					
 					this.ViewModel.Session = session;
+
+					this.Description = String.Format("Saved {0}", path);
 				}
 				catch (Exception ex)
 				{
@@ -1038,6 +1064,106 @@ namespace Protomeme
 			}
 		}
 		#endregion
+		#region public ICommand PrintCommand
+		public class PrintFlashCardMakerViewModelCommand : FlashCardMakerViewModelCommandBase
+		{
+			public PrintFlashCardMakerViewModelCommand(FlashCardMakerViewModel viewModel)
+				: base(viewModel)
+			{
+			}
+
+			public PageContent CreateFlashCardPage(int pagenum, int cardsPerPage, string tag, FlowDirection direction)
+			{
+				FixedPage fixedPage = new FixedPage();
+				PageContent pageContent = new PageContent();
+				var images = this.ViewModel.SourceImages.ToList();
+				//Set up the WPF Control to be printed
+				FlashCardPrintPage page = new FlashCardPrintPage();
+				page.PrintInfo = new FlashCardPrintPage.PageInfo()
+				{
+					SourceImages = images,
+					CardsPerPage = cardsPerPage,
+					StartIndex = pagenum * cardsPerPage,
+					Tag = tag,
+					Direction = direction,
+					BorderThickness=new System.Windows.Thickness(2f),
+					BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray)
+				};
+				page.PrintInfo.Build();
+				page.DataContext = page.PrintInfo;
+
+				//Create first page of document
+				fixedPage.Children.Add(page);
+				((System.Windows.Markup.IAddChild)pageContent).AddChild(fixedPage);
+
+				return pageContent;
+			}
+
+			public FixedDocument CreateFlashCardDocument()
+			{
+				FixedDocument fixedDoc = new FixedDocument();
+				int cardsPerPage = 8;
+				//batch images into buckets of card size
+
+				for (int pagenum  = 0;
+					pagenum < this.ViewModel.SourceImages.Count / cardsPerPage;
+					pagenum ++)
+				{
+					var frontPage = CreateFlashCardPage(
+						pagenum, cardsPerPage, "front", FlowDirection.LeftToRight);
+					fixedDoc.Pages.Add(frontPage);
+
+					var backPage = CreateFlashCardPage(
+						pagenum, cardsPerPage, "back", FlowDirection.RightToLeft);
+					fixedDoc.Pages.Add(backPage);
+				}
+
+				return fixedDoc;
+			}
+
+			#region ResultDocument (INotifyPropertyChanged Property)
+			private FixedDocument _ResultDocument;
+			public FixedDocument ResultDocument
+			{
+				get { return this._ResultDocument; }
+				set
+				{
+					if (value == _ResultDocument)
+						return;
+
+					this._ResultDocument = value;
+					this.OnPropertyChanged("ResultDocument");
+				}
+			}
+			#endregion
+			public override void Execute(object parameter)
+			{
+				try
+				{
+					var doc = CreateFlashCardDocument();
+					this.ResultDocument = doc;
+				}
+				catch (Exception ex)
+				{
+					this.ViewModel.ErrorCollector.Add(new KeyValuePair<object, Exception>(
+						null, ex));
+				}
+			}
+		}
+		PrintFlashCardMakerViewModelCommand _PrintCommand;
+		public System.Windows.Input.ICommand PrintCommand
+		{
+			get
+			{
+				if (this._PrintCommand == null)
+				{
+					this._PrintCommand = new PrintFlashCardMakerViewModelCommand(this);
+				}
+				return this._PrintCommand;
+			}
+		}
+		#endregion
+
 
 		/// <summary>
 		/// An image that can be tagged with regions that represent parts of

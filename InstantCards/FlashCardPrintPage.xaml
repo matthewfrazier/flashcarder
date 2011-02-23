@@ -1,0 +1,58 @@
+﻿<UserControl x:Class="Protomeme.FlashCardPrintPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignHeight="1060" d:DesignWidth="835">
+    <Grid>
+		<UniformGrid Rows="4" Columns="2" Width="8.5in" Height="11in" FlowDirection="{Binding Direction}">
+			<Border BorderThickness="{Binding BorderThickness}" BorderBrush="{Binding BorderBrush}">
+				<DockPanel DataContext="{Binding CardsOnPage[0]}">
+					<Label DockPanel.Dock="Bottom" Content="{Binding Header}"/>
+					<Image Source="{Binding ImageUrl}"/>
+				</DockPanel>
+			</Border>
+			<Border BorderThickness="{Binding BorderThickness}" BorderBrush="{Binding BorderBrush}">
+					<DockPanel DataContext="{Binding CardsOnPage[1]}">
+				<Label DockPanel.Dock="Bottom" Content="{Binding Header}"/>
+				<Image Source="{Binding ImageUrl}"/>
+			</DockPanel>
+			</Border>		<Border BorderThickness="{Binding BorderThickness}" BorderBrush="{Binding BorderBrush}">
+						<DockPanel DataContext="{Binding CardsOnPage[2]}">
+				<Label DockPanel.Dock="Bottom" Content="{Binding Header}"/>
+				<Image Source="{Binding ImageUrl}"/>
+			</DockPanel>
+			</Border>
+			<Border BorderThickness="{Binding BorderThickness}" BorderBrush="{Binding BorderBrush}">
+							<DockPanel DataContext="{Binding CardsOnPage[3]}">
+				<Label DockPanel.Dock="Bottom" Content="{Binding Header}"/>
+				<Image Source="{Binding ImageUrl}"/>
+			</DockPanel>
+			</Border>
+			<Border BorderThickness="{Binding BorderThickness}" BorderBrush="{Binding BorderBrush}">
+								<DockPanel DataContext="{Binding CardsOnPage[4]}">
+				<Label DockPanel.Dock="Bottom" Content="{Binding Header}"/>
+				<Image Source="{Binding ImageUrl}"/>
+			</DockPanel>
+			</Border>
+			<Border BorderThickness="{Binding BorderThickness}" BorderBrush="{Binding BorderBrush}">
+									<DockPanel DataContext="{Binding CardsOnPage[5]}">
+				<Label DockPanel.Dock="Bottom" Content="{Binding Header}"/>
+				<Image Source="{Binding ImageUrl}"/>
+			</DockPanel>
+			</Border>
+			<Border BorderThickness="{Binding BorderThickness}" BorderBrush="{Binding BorderBrush}">
+										<DockPanel DataContext="{Binding CardsOnPage[6]}">
+				<Label DockPanel.Dock="Bottom" Content="{Binding Header}"/>
+				<Image Source="{Binding ImageUrl}"/>
+			</DockPanel>
+			</Border>
+			<Border BorderThickness="{Binding BorderThickness}" BorderBrush="{Binding BorderBrush}">
+											<DockPanel DataContext="{Binding CardsOnPage[7]}">
+				<Label DockPanel.Dock="Bottom" Content="{Binding Header}"/>
+				<Image Source="{Binding ImageUrl}"/>
+			</DockPanel>
+			</Border>
+		</UniformGrid>
+	</Grid>
+</UserControl>
