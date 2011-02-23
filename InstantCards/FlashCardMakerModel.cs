@@ -25,8 +25,208 @@ namespace Protomeme
 
 		public class BoundErrorCollector :
 			ObservableCollection<KeyValuePair<object, Exception>>,
-			IErrorCollector
+			IErrorCollector,
+			INotifyPropertyChanged
 		{
+			protected override void OnCollectionChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+			{
+				base.OnCollectionChanged(e);
+				var summary = String.Format("{0}: {1}", this[0].Key, this[0].Value);
+				if (this.Count > 1)
+					summary += String.Format(" ({0} total errors)", this.Count);
+				this.ShortErrorSummary = summary;
+
+				this.HasErrors = this.Count > 0;
+			}
+			#region INotifyPropertyChanged
+
+			/// <summary>
+			/// The PropertyChanged event is used by consuming code
+			/// (like WPF's binding infrastructure) to detect when
+			/// a value has changed.
+			/// </summary>
+			public event PropertyChangedEventHandler PropertyChanged;
+
+			/// <summary>
+			/// Raise the PropertyChanged event for the 
+			/// specified property.
+			/// </summary>
+			/// <param name="propertyName">
+			/// A string representing the name of 
+			/// the property that changed.</param>
+			/// <remarks>
+			/// Only raise the event if the value of the property 
+			/// has changed from its previous value</remarks>
+			protected void OnPropertyChanged(string propertyName)
+			{
+				// Validate the property name in debug builds
+				VerifyProperty(propertyName);
+
+				if (null != PropertyChanged)
+				{
+					PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+				}
+			}
+
+			/// <summary>
+			/// Verifies whether the current class provides a property with a given
+			/// name. This method is only invoked in debug builds, and results in
+			/// a runtime exception if the <see cref="OnPropertyChanged"/> method
+			/// is being invoked with an invalid property name. This may happen if
+			/// a property's name was changed but not the parameter of the property's
+			/// invocation of <see cref="OnPropertyChanged"/>.
+			/// </summary>
+			/// <param name="propertyName">The name of the changed property.</param>
+			[System.Diagnostics.Conditional("DEBUG")]
+			private void VerifyProperty(string propertyName)
+			{
+				Type type = this.GetType();
+
+				// Look for a *public* property with the specified name
+				System.Reflection.PropertyInfo pi = type.GetProperty(propertyName);
+				if (pi == null)
+				{
+					// There is no matching property - notify the developer
+					string msg = "OnPropertyChanged was invoked with invalid " +
+									"property name {0}. {0} is not a public " +
+									"property of {1}.";
+					msg = String.Format(msg, propertyName, type.FullName);
+					System.Diagnostics.Debug.Fail(msg);
+				}
+			}
+
+			#endregion
+			#region public ICommand ResetCommand
+			public class ResetBoundErrorCollectorCommand : BoundErrorCollectorCommandBase
+			{
+				public ResetBoundErrorCollectorCommand(BoundErrorCollector viewModel)
+					: base(viewModel)
+				{
+				}
+				public override void Execute(object parameter)
+				{
+					this.ViewModel.Clear();
+				}
+			}
+			ResetBoundErrorCollectorCommand _ResetCommand;
+			public System.Windows.Input.ICommand ResetCommand
+			{
+				get
+				{
+					if (this._ResetCommand == null)
+					{
+						this._ResetCommand = new ResetBoundErrorCollectorCommand(this);
+					}
+					return this._ResetCommand;
+				}
+			}
+			#endregion
+			#region public ICommand CopyToClipboardCommand
+			public class CopyToClipboardBoundErrorCollectorCommand : BoundErrorCollectorCommandBase
+			{
+				public CopyToClipboardBoundErrorCollectorCommand(BoundErrorCollector viewModel)
+					: base(viewModel)
+				{
+				}
+				public override void Execute(object parameter)
+				{
+					StringBuilder message= new StringBuilder();
+					foreach (var line in this.ViewModel)
+					{
+						message.AppendFormat("{0}: {1}\n",
+							line.Key, line.Value);
+					}
+					Clipboard.SetText(message.ToString());
+				}
+			}
+			CopyToClipboardBoundErrorCollectorCommand _CopyToClipboardCommand;
+			public System.Windows.Input.ICommand CopyToClipboardCommand
+			{
+				get
+				{
+					if (this._CopyToClipboardCommand == null)
+					{
+						this._CopyToClipboardCommand = new CopyToClipboardBoundErrorCollectorCommand(this);
+					}
+					return this._CopyToClipboardCommand;
+				}
+			}
+			#endregion
+
+
+			#region BoundErrorCollector Command Base
+			public abstract class BoundErrorCollectorCommandBase : System.Windows.Input.ICommand
+			{
+				public BoundErrorCollectorCommandBase(BoundErrorCollector viewModel)
+				{
+					this._viewModel = viewModel;
+				}
+				#region BoundErrorCollector ViewModel
+				private BoundErrorCollector _viewModel;
+				public virtual BoundErrorCollector ViewModel
+				{
+					protected get { return this._viewModel; }
+					set { this._viewModel = value; }
+				}
+				#endregion
+
+				#region ICommand Members
+				public virtual bool CanExecute(object parameter)
+				{
+					return (this.ViewModel != null);
+				}
+
+				public virtual event EventHandler CanExecuteChanged;
+
+				protected virtual void OnCanExecuteChanged()
+				{
+					var handler = this.CanExecuteChanged;
+					if (handler == null)
+						return;
+					handler(this, EventArgs.Empty);
+				}
+
+				public abstract void Execute(object parameter);
+
+				#endregion
+			}
+			#endregion
+			#region IErrorCollector Members
+
+			#region HasErrors (INotifyPropertyChanged Property)
+			private bool _HasErrors;
+			public bool HasErrors
+			{
+				get { return this._HasErrors; }
+				set
+				{
+					if (value == _HasErrors)
+						return;
+
+					this._HasErrors = value;
+					this.OnPropertyChanged("HasErrors");
+				}
+			}
+			#endregion
+			#region ShortErrorSummary (INotifyPropertyChanged Property)
+			private string _ShortErrorSummary;
+			public string ShortErrorSummary
+			{
+				get { return this._ShortErrorSummary; }
+				set
+				{
+					if (value == _ShortErrorSummary)
+						return;
+
+					this._ShortErrorSummary = value;
+					this.OnPropertyChanged("ShortErrorSummary");
+				}
+			}
+			#endregion
+		
+
+		
+			#endregion
 		}
 
 		public class TaggedRegion :
@@ -90,7 +290,6 @@ namespace Protomeme
 			}
 
 			#endregion
-
 			#region Tag (INotifyPropertyChanged Property)
 			private string _Tag;
 			public string Tag
@@ -106,7 +305,6 @@ namespace Protomeme
 				}
 			}
 			#endregion
-
 			#region Region (INotifyPropertyChanged Property)
 			private Int32Rect _Region;
 			public Int32Rect Region
@@ -122,7 +320,6 @@ namespace Protomeme
 				}
 			}
 			#endregion
-
 			#region ImageUrl (INotifyPropertyChanged Property)
 			private string _ImageUrl;
 			public string ImageUrl
@@ -138,7 +335,6 @@ namespace Protomeme
 				}
 			}
 			#endregion
-
 			#region Image (INotifyPropertyChanged Property)
 			private BitmapSource _Image;
 			[XmlIgnore]
@@ -299,7 +495,21 @@ namespace Protomeme
 				}
 			}
 			#endregion
+			#region SessionPath (INotifyPropertyChanged Property)
+			private string _SessionPath;
+			public string SessionPath
+			{
+				get { return this._SessionPath; }
+				set
+				{
+					if (value == _SessionPath)
+						return;
 
+					this._SessionPath = value;
+					this.OnPropertyChanged("SessionPath");
+				}
+			}
+			#endregion
 			#region SourceImages (INotifyPropertyChanged Property)
 			private List<SourceImage> _SourceImages;
 			public List<SourceImage> SourceImages
@@ -672,11 +882,12 @@ namespace Protomeme
 						session = new FlashCardSession();
 					}
 					session.SourceImages = this.ViewModel.SourceImages.ToList();
-
 					using (var xw = System.Xml.XmlWriter.Create(path))
 					{
 						this.ViewModel.xmlSerializer.Serialize(xw, session);
 					}
+					session.SessionPath = path; 
+					
 					this.ViewModel.Session = session;
 				}
 				catch (Exception ex)
@@ -779,9 +990,9 @@ namespace Protomeme
 							var trpath =
 								System.IO.Path.Combine(
 									System.IO.Path.GetDirectoryName(path),
-									System.IO.Path.ChangeExtension(
-										System.IO.Path.GetFileName(si.ImageUrl),
-										String.Format("-{0}.png", tr.Tag)));
+										String.Format("{0}-{1}.png",
+										System.IO.Path.GetFileNameWithoutExtension(si.ImageUrl),
+										tr.Tag));
 							//load the image so we can explicitly crop it rather than using the in-memory version
 							var image = new BitmapImage(new Uri(si.ImageUrl));
 							//crop to a rounded representation of the rect
@@ -803,7 +1014,6 @@ namespace Protomeme
 							{
 								this.ViewModel.ErrorCollector.Add(new KeyValuePair<object, Exception>(
 									trpath, fsex));
-
 							}
 						}
 					}

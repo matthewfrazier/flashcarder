@@ -32,8 +32,10 @@ namespace Protomeme
 
 	public interface IErrorCollector: 
 		IList<KeyValuePair<object,Exception>>,
-		IProgressSink
+		INotifyPropertyChanged
 	{
+		bool HasErrors { get; }
+		string ShortErrorSummary { get; }
 	}
 
 

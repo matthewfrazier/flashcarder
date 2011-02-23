@@ -7,12 +7,39 @@
         Loaded="Window_Loaded"
         >
 
+	<Window.Resources>
+		<local:BoolToVisibilityConverter
+         x:Key="VisibleWhenTrue"
+         TrueValue="Visible" FalseValue="Collapsed" />
+		<Style x:Key="LinkButton" TargetType="Button">
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="Button">
+						<ControlTemplate.Resources>
+							<Style TargetType="{x:Type TextBlock}">
+								<Setter Property="TextDecorations" Value="Underline" />
+							</Style>
+						</ControlTemplate.Resources>
+						<ContentPresenter />
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+			<Setter Property="Foreground" Value="Blue" />
+			<Setter Property="Cursor" Value="Hand" />
+			<Style.Triggers>
+				<Trigger Property="IsMouseOver" Value="true">
+					<Setter Property="Foreground" Value="Red" />
+				</Trigger>
+			</Style.Triggers>
+		</Style>
+	</Window.Resources>
 	<DockPanel>
 		<Menu DockPanel.Dock="Top">
 			<MenuItem Header="_File">
 				<MenuItem Header="_Open Session" Command="{Binding OpenSessionCommand}"/>
 				<MenuItem Header="_Clear Session" Command="{Binding ClearImagesCommand}"/>
-				<MenuItem Header="_Save Session" Command="{Binding SaveCommand}"/>
+				<MenuItem Header="_Save Session" Command="{Binding SaveCommand}"
+						  CommandParameter="{Binding Session.SessionPath}"/>
 				<MenuItem Header="_Export Flash Cards" Command="{Binding ExportCommand}"/>
 
 				<Separator/>
@@ -20,11 +47,26 @@
 			</MenuItem>
 		</Menu>
 
+		<StatusBar DockPanel.Dock="Top"
+				   Visibility="{Binding ErrorCollector.HasErrors,Converter={StaticResource VisibleWhenTrue}}">
+			<StatusBar.ContextMenu>
+				<ContextMenu>
+					<MenuItem Header="Clear" Command="{Binding ErrorCollector.ResetCommand}"/>
+					<MenuItem Header="Copy" Command="{Binding ErrorCollector.CopyToClipboardCommand}"/>
+				</ContextMenu>
+			</StatusBar.ContextMenu>
+
+			<StatusBarItem>
+				<StackPanel Orientation="Horizontal">
+				<Label Content="{Binding ErrorCollector.ShortErrorSummary}"/>
+				<Button Content="Clear" Command="{Binding ErrorCollector.ResetCommand}"/>
+				</StackPanel>
+			</StatusBarItem>
+		</StatusBar>
 
 		<Grid>
 			<Grid.RowDefinitions>
-				<RowDefinition Height="*" />
-				<RowDefinition Height="350"/>
+				<RowDefinition />
 			</Grid.RowDefinitions>
 
 			<Grid.ColumnDefinitions>
@@ -33,15 +75,11 @@
 			</Grid.ColumnDefinitions>
 			
 			<GridSplitter Grid.Column="1"
-						  Grid.RowSpan="2"
-						  Width="5"
-						  
+						  Width="8"
 						  VerticalAlignment="Stretch"
 						  HorizontalAlignment="Left"/>
 			
 			<DockPanel
-                Grid.Row="0"
-				Grid.RowSpan="2"
 				Grid.Column="0">
 				<ListView 
                   x:Name="sourceImageListView"
@@ -73,12 +111,12 @@
 			</DockPanel>
 
 			<Grid
-				Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+				Grid.Column="1"
 				>
 				<Grid.RowDefinitions>
-					<RowDefinition Height="300"/>
+					<RowDefinition MinHeight="440" Height="*"/>
 					<RowDefinition Height="40"/>
-					<RowDefinition MinHeight="150" Height="*"/>
+					<RowDefinition MinHeight="150"/>
 				</Grid.RowDefinitions>
 				
 				<TextBlock Grid.Row="1"
@@ -91,6 +129,8 @@
 				<local:ImageCropper
 					x:Name="imageCropper"
 					Grid.Row="2"
+					Background="DarkGray"
+					Margin="16,16,16,16"
 					Source="{Binding SelectedSourceImage.ImageUrl}"
 					CroppedImageBounds="{Binding SelectedTaggedRegion.Region,Mode=TwoWay}"
                     MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}"
@@ -113,7 +153,6 @@
 						<ItemsPanelTemplate>
 							<WrapPanel Width="{Binding (FrameworkElement.ActualWidth), RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}"
                                    ItemWidth="{Binding (ListView.View).ItemWidth, RelativeSource={RelativeSource AncestorType=ListView}}"
-                                   MinWidth="{Binding ItemWidth, RelativeSource={RelativeSource Self}}"
                                    ItemHeight="{Binding (ListView.View).ItemHeight, RelativeSource={RelativeSource AncestorType=ListView}}" />
 						</ItemsPanelTemplate>
 					</ListView.ItemsPanel>
