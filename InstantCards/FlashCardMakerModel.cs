@@ -139,7 +139,7 @@ namespace Protomeme
 				}
 				public override void Execute(object parameter)
 				{
-					StringBuilder message= new StringBuilder();
+					StringBuilder message = new StringBuilder();
 					foreach (var line in this.ViewModel)
 					{
 						message.AppendFormat("{0}: {1}\n",
@@ -161,8 +161,6 @@ namespace Protomeme
 				}
 			}
 			#endregion
-
-
 			#region BoundErrorCollector Command Base
 			public abstract class BoundErrorCollectorCommandBase : System.Windows.Input.ICommand
 			{
@@ -232,9 +230,9 @@ namespace Protomeme
 				}
 			}
 			#endregion
-		
 
-		
+
+
 			#endregion
 		}
 
@@ -403,6 +401,7 @@ namespace Protomeme
 					if (this.SelectedSourceImage == null)
 					{
 						this.SelectedTaggedRegion = null;
+						return;
 					}
 
 					if (this.SelectedSourceImage.TaggedRegions == null
@@ -610,7 +609,6 @@ namespace Protomeme
 			}
 		}
 		#endregion
-
 		#region SourceImages (INotifyPropertyChanged Property)
 		private ObservableCollection<SourceImage> _SourceImages;
 		public ObservableCollection<SourceImage> SourceImages
@@ -626,7 +624,6 @@ namespace Protomeme
 			}
 		}
 		#endregion
-
 		#region SelectedSourceImage (INotifyPropertyChanged Property)
 		private SourceImage _SelectedSourceImage;
 		public SourceImage SelectedSourceImage
@@ -889,9 +886,12 @@ namespace Protomeme
 				{
 					var path = parameter as string;
 
-					if (String.IsNullOrEmpty(path))
+					if (String.IsNullOrEmpty(path) || System.IO.Directory.Exists(path))
 					{
+
 						var saveDialog = new Microsoft.Win32.SaveFileDialog();
+						if (System.IO.Directory.Exists(path))
+							saveDialog.InitialDirectory = path;
 						saveDialog.Title = "Save Flash Card Session";
 						saveDialog.Filter = @"Flash Card Session(*.flashcards.xml)|*.flashcards.xml";
 						var result = saveDialog.ShowDialog();
@@ -910,8 +910,8 @@ namespace Protomeme
 					{
 						this.ViewModel.xmlSerializer.Serialize(xw, session);
 					}
-					session.SessionPath = path; 
-					
+					session.SessionPath = path;
+
 					this.ViewModel.Session = session;
 
 					this.Description = String.Format("Saved {0}", path);
@@ -1086,7 +1086,7 @@ namespace Protomeme
 					StartIndex = pagenum * cardsPerPage,
 					Tag = tag,
 					Direction = direction,
-					BorderThickness=new System.Windows.Thickness(2f),
+					BorderThickness = new System.Windows.Thickness(2f),
 					BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray)
 				};
 				page.PrintInfo.Build();
@@ -1105,9 +1105,9 @@ namespace Protomeme
 				int cardsPerPage = 8;
 				//batch images into buckets of card size
 
-				for (int pagenum  = 0;
+				for (int pagenum = 0;
 					pagenum < this.ViewModel.SourceImages.Count / cardsPerPage;
-					pagenum ++)
+					pagenum++)
 				{
 					var frontPage = CreateFlashCardPage(
 						pagenum, cardsPerPage, "front", FlowDirection.LeftToRight);
@@ -1163,7 +1163,117 @@ namespace Protomeme
 			}
 		}
 		#endregion
+		#region public ICommand PackageCommand
+		public class PackageFlashCardMakerViewModelCommand : FlashCardMakerViewModelCommandBase
+		{
+			public PackageFlashCardMakerViewModelCommand(FlashCardMakerViewModel viewModel)
+				: base(viewModel)
+			{
+			}
 
+			string CopyToRelativePath(string sourceUrl, string destdir)
+			{
+				var fn = System.IO.Path.GetFileName(sourceUrl);
+				var destpath = System.IO.Path.Combine(
+					destdir,
+					fn);
+				int count = 0;
+				while (System.IO.File.Exists(destpath))
+				{
+					destpath = System.IO.Path.ChangeExtension(destpath,
+						String.Format(
+						"{0}{1}",
+						count++,
+						System.IO.Path.GetExtension(destpath)));
+				}
+				return destpath;
+			}
+			
+			public override void Execute(object parameter)
+			{
+				var destpath = parameter as string;
+
+				if (String.IsNullOrEmpty(destpath))
+				{
+					var saveDialog = new Microsoft.Win32.SaveFileDialog();
+					if (System.IO.Directory.Exists(destpath))
+						saveDialog.InitialDirectory = destpath;
+					saveDialog.Title = "Package Flash Card Session and Images";
+					saveDialog.Filter = @"Flash Card Session(*.flashcards.xml)|*.flashcards.xml";
+					var result = saveDialog.ShowDialog();
+					if (result == null || !result.Value)
+						return;
+					destpath = saveDialog.FileName;
+				}
+				var destdir = System.IO.Path.GetDirectoryName(destpath);
+
+				//create a new session
+				var newses = new FlashCardSession()
+				{
+					SessionPath = this.ViewModel.Session.SessionPath,
+					Title = this.ViewModel.Session.Title,
+					SourceImages = new List<SourceImage>()
+				};
+
+				//gather images at destpath, rename if needed, update session properties
+				foreach (var si in this.ViewModel.SourceImages)
+				{
+					try
+					{
+						var newpath = CopyToRelativePath(si.ImageUrl,
+							destdir);
+						System.IO.File.Copy(si.ImageUrl, newpath);
+						var newsi = new SourceImage()
+						{
+							ImageUrl = newpath,
+							Title = si.Title,
+							TaggedRegions = new ObservableCollection<TaggedRegion>()
+						};
+						foreach (var tr in si.TaggedRegions)
+						{
+							try
+							{
+								var newtr = CopyToRelativePath(tr.ImageUrl,
+									destdir);
+								System.IO.File.Copy(tr.ImageUrl, newtr);
+								newsi.TaggedRegions.Add(new TaggedRegion()
+								{
+									ImageUrl = newtr,
+									Region = tr.Region,
+									Tag = tr.Tag
+								});
+							}
+							catch (Exception ex)
+							{
+								this.ViewModel.ErrorCollector.Add(new KeyValuePair<object, Exception>(
+									tr.ImageUrl, ex));
+							}
+						}
+						newses.SourceImages.Add(newsi);
+					}
+					catch (Exception ex)
+					{
+						this.ViewModel.ErrorCollector.Add(new KeyValuePair<object, Exception>(
+							si.ImageUrl, ex));
+					}
+				}
+				this.ViewModel.Session = newses;
+				this.ViewModel.SaveCommand.Execute(destpath);
+			}
+		}
+		PackageFlashCardMakerViewModelCommand _PackageCommand;
+		public System.Windows.Input.ICommand PackageCommand
+		{
+			get
+			{
+				if (this._PackageCommand == null)
+				{
+					this._PackageCommand = new PackageFlashCardMakerViewModelCommand(this);
+				}
+				return this._PackageCommand;
+			}
+		}
+		#endregion
 
 		/// <summary>
 		/// An image that can be tagged with regions that represent parts of
@@ -1277,8 +1387,6 @@ namespace Protomeme
 				}
 			}
 			#endregion
-
-
 		}
 	}
 }

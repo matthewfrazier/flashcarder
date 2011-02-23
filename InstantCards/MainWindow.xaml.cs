@@ -22,10 +22,7 @@ namespace Protomeme
 		public MainWindow()
 		{
 			InitializeComponent();
-
-			
 		}
-
 
 		#region MainWindow Command Base
 		public abstract class MainWindowCommandBase : System.Windows.Input.ICommand
@@ -96,7 +93,6 @@ namespace Protomeme
 		}
 		#endregion
 
-
 		public Protomeme.FlashCardMakerViewModel Model { get; set; }
 
 		#region Command Line Handler
@@ -107,12 +103,14 @@ namespace Protomeme
 				string ses = null;
 				string importdir = null;
 				string importpattern = "*.png";
+				bool print = false;
 
 				var os = new NDesk.Options.OptionSet()
 				{
 					{"s|session=", v => { ses=v; }},
 					{"d|importdir=", v => { importdir = v;}},
-					{"p|importpattern=", v => {importpattern = v;}},
+					{"i|importpattern=", v => {importpattern = v;}},
+					{"p|print",var=>{ print = true;}},
 				};
 
 				os.Parse(App.CommanLineArgs);
@@ -128,6 +126,11 @@ namespace Protomeme
 				if (ses != null)
 				{
 					this.Model.OpenSessionCommand.Execute(ses);
+				}
+
+				if(print)
+				{
+					this.PrintCommand.Execute(null);
 				}
 			}
 		}

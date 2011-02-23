@@ -1,0 +1,21 @@
+﻿<FlowDocument xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			          xmlns:local="clr-namespace:Protomeme"
+              ColumnWidth="8.5in" FontSize="14" FontFamily="Georgia">
+	<Paragraph>
+		<ItemsControl ItemsSource="{Binding CardsOnPage}">
+			<ItemsControl.ItemsPanel>
+				<ItemsPanelTemplate>
+					<UniformGrid Rows="4" Columns="2" Width="8.5in" Height="11in" FlowDirection="{Binding Direction}"
+										 />
+				</ItemsPanelTemplate>
+			</ItemsControl.ItemsPanel>
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<Border>
+						<local:FlashCard/>
+					</Border>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+	</Paragraph>
+</FlowDocument>

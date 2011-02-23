@@ -37,13 +37,13 @@
 	<DockPanel>
 		<Menu DockPanel.Dock="Top">
 			<MenuItem Header="_File">
-				<MenuItem Header="_Open Session" Command="{Binding OpenSessionCommand}"/>
-				<MenuItem Header="_Clear Session" Command="{Binding ClearImagesCommand}"/>
-				<MenuItem Header="_Save Session" Command="{Binding SaveCommand}"
+				<MenuItem Header="_Open" Command="{Binding OpenSessionCommand}"/>
+				<MenuItem Header="_Clear" Command="{Binding ClearImagesCommand}"/>
+				<MenuItem Header="_Save" Command="{Binding SaveCommand}"
 						  CommandParameter="{Binding Session.SessionPath}"/>
-				<MenuItem Header="_Export Flash Cards" Command="{Binding ExportCommand}"/>
-				<MenuItem Header="_Print Flash Cards" Command="{Binding PrintCommand,ElementName=mainWindow}"/>
-
+				<MenuItem Header="_Export" Command="{Binding ExportCommand}"/>
+				<MenuItem Header="_Package" Command="{Binding PackageCommand}"/>
+				<MenuItem Header="_Print" Command="{Binding PrintCommand,ElementName=mainWindow}"/>
 				<Separator/>
 				<MenuItem Header="_Import Images" Command="{Binding LoadSourceImagesFromFilesCommand}"/>
 			</MenuItem>

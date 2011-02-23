@@ -287,7 +287,8 @@ namespace Protomeme
 					
 					this.CardsOnPage.Add(new CardViewModel()
 					{
-						ImageUrl = url
+						ImageUrl = url,
+						Header = tr.ImageUrl
 					});
 				}
 			}

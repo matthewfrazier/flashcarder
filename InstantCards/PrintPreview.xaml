@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Protomeme.PrintPreview"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PrintPreview" Height="300" Width="300">
+        Title="PrintPreview" Height="370" Width="740">
     <Grid>
 		<DocumentViewer Document="{Binding}"/>
 	</Grid>
