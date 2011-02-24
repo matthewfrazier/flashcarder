@@ -358,6 +358,21 @@ namespace Protomeme
 				}
 			}
 			#endregion
+			#region Identifier (INotifyPropertyChanged Property)
+			private string _Identifier;
+			public string Identifier
+			{
+				get { return this._Identifier; }
+				set
+				{
+					if (value == _Identifier)
+						return;
+
+					this._Identifier = value;
+					this.OnPropertyChanged("Identifier");
+				}
+			}
+			#endregion
 		}
 
 
@@ -1041,6 +1056,8 @@ namespace Protomeme
 								this.ViewModel.ErrorCollector.Add(new KeyValuePair<object, Exception>(
 									trpath, fsex));
 							}
+							if (tr.Identifier == null)
+								tr.Identifier = System.IO.Path.GetFileNameWithoutExtension(tr.ImageUrl);
 						}
 					}
 				}
