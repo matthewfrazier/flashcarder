@@ -280,14 +280,12 @@ namespace Protomeme
 
 					var tr = si.TaggedRegions.ToList().Find(
 						m => {return m.Tag == this.Tag;});
-					var url = "missing_image.png";
 					if (tr == null)
 						continue;
-					url = tr.ImageUrl;
 					
 					this.CardsOnPage.Add(new CardViewModel()
 					{
-						ImageUrl = url,
+						Image = tr.Image.Clone(),
 						Header = tr.Identifier
 					});
 				}
@@ -354,18 +352,19 @@ namespace Protomeme
 
 				#endregion
 
-				#region ImageUrl (INotifyPropertyChanged Property)
-				private string _ImageUrl;
-				public string ImageUrl
+
+				#region Image (INotifyPropertyChanged Property)
+				private ImageSource _Image;
+				public ImageSource Image
 				{
-					get { return this._ImageUrl; }
+					get { return this._Image; }
 					set
 					{
-						if (value == _ImageUrl)
+						if (value == _Image)
 							return;
 
-						this._ImageUrl = value;
-						this.OnPropertyChanged("ImageUrl");
+						this._Image = value;
+						this.OnPropertyChanged("Image");
 					}
 				}
 				#endregion

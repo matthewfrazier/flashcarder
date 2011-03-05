@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Protomeme"
         xmlns:dap="clr-namespace:DAP.Adorners;assembly=CroppingAdorner"
-        Title="Instant Flash Cards" Height="594" Width="821"
+        Title="Instant Flash Cards" Height="692" Width="1117"
         Loaded="Window_Loaded"
 		x:Name="mainWindow"
         >
@@ -43,9 +43,13 @@
 						  CommandParameter="{Binding Session.SessionPath}"/>
 				<MenuItem Header="_Export" Command="{Binding ExportCommand}"/>
 				<MenuItem Header="_Package" Command="{Binding PackageCommand}"/>
-				<MenuItem Header="_Print" Command="{Binding PrintCommand,ElementName=mainWindow}"/>
+				<MenuItem Header="_Print" Command="{Binding PrintCommand,ElementName=mainWindow}"
+						  CommandParameter="{Binding SelectedItems,ElementName=sourceImageListView}"/>
 				<Separator/>
 				<MenuItem Header="_Import Images" Command="{Binding LoadSourceImagesFromFilesCommand}"/>
+			</MenuItem>
+			<MenuItem Header="_Edit">
+				<MenuItem Header="_Paste" Command="{Binding PasteImageFromClipboardCommand}"/>
 			</MenuItem>
 		</Menu>
 
@@ -66,135 +70,75 @@
 				</StackPanel>
 			</StatusBarItem>
 		</StatusBar>
-
-		<Grid>
-			<Grid.RowDefinitions>
-				<RowDefinition />
-			</Grid.RowDefinitions>
-
+		<Grid Name="grid2">
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="340" MinWidth="120"/>
-				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="300*" />
+				<ColumnDefinition Width="800*" />
 			</Grid.ColumnDefinitions>
-			
-			<GridSplitter Grid.Column="1"
-						  Width="8"
-						  VerticalAlignment="Stretch"
-						  HorizontalAlignment="Left"/>
-			
-			<DockPanel
-				Grid.Column="0">
-				<ListView 
-                  x:Name="sourceImageListView"
-                  ItemsSource="{Binding Session.SourceImages}"
-				SelectedItem="{Binding SelectedSourceImage}"
-                >
-					<ListView.View>
-						<GridView>
-							<GridViewColumn Header="Source Image"
-											Width="auto">
-								<GridViewColumn.CellTemplate>
-									<DataTemplate>
-										<Image 
-								Source="{Binding Image}" 
-								ToolTip="{Binding Title}"
-								MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ScrollContentPresenter}}}"
-								MaxHeight="40"
-								/>
-									</DataTemplate>
-								</GridViewColumn.CellTemplate>
-							</GridViewColumn>
-							<GridViewColumn Header="Regions"
-											Width="auto"
-											DisplayMemberBinding="{Binding TaggedRegions.Count}">
-							</GridViewColumn>
-						</GridView>
-					</ListView.View>
-				</ListView>
-			</DockPanel>
-
-			<Grid
-				Grid.Column="1"
-				>
+			<GridSplitter Grid.Column="0" Width="5" VerticalAlignment="Stretch" HorizontalAlignment="Right"/>
+			<Grid Name="grid3" Grid.Column="2" Margin="0,6,6,0">
 				<Grid.RowDefinitions>
-					<RowDefinition MinHeight="440" Height="*"/>
-					<RowDefinition Height="40"/>
-					<RowDefinition MinHeight="150"/>
+					<RowDefinition Height="180*" />
+					<RowDefinition Height="380*" />
 				</Grid.RowDefinitions>
+
+				<GridSplitter Grid.Row="0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="5"/>
+
+				<Grid Grid.Row="1" VerticalAlignment="Stretch">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="40"/>
+						<RowDefinition Height="210*"/>
+					</Grid.RowDefinitions>
+
+					<TextBlock Height="29" VerticalAlignment="Top" Grid.Row="0">
+					Highlight the region for '<TextBlock Text="{Binding SelectedTaggedRegion.Tag}" />'.</TextBlock>
+					<Border BorderBrush="Silver" BorderThickness="1" Grid.Row="2" Name="border1" Background="#FF02023E">
+						<local:ImageCropper x:Name="imageCropper" Source="{Binding SelectedSourceImage.Image}" CroppedImageBounds="{Binding SelectedTaggedRegion.Region,Mode=TwoWay}" MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+					</Border>
+				</Grid>
 				
-				<TextBlock Grid.Row="1"
-						   Margin="4,4,4,4"
-						   >
-					<TextBox Margin="2,2,2,2" Width="auto" Height="40" Text="{Binding SelectedTaggedRegion.Region}"/>
-					<LineBreak/>
-					Highlight the region for '<TextBlock Text="{Binding SelectedTaggedRegion.Tag}"/>'.</TextBlock>
-
-				<DockPanel
-					Background="DimGray"
-					Grid.Row="2"
-					>
-				<local:ImageCropper
-					x:Name="imageCropper"
-					
-					Margin="16,16,16,16"
-					Source="{Binding SelectedSourceImage.Image}"
-					CroppedImageBounds="{Binding SelectedTaggedRegion.Region,Mode=TwoWay}"
-                    MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}"
-					/>
-				</DockPanel>
-				
-				<GridSplitter
-					Grid.Row="0"
-					VerticalAlignment="Bottom"
-					Height="5"
-					HorizontalAlignment="Stretch"/>
-
-
-				<ListView
-					Grid.Row="0"
-                    ItemsSource="{Binding SelectedSourceImage.TaggedRegions}"
-                    SelectedItem="{Binding SelectedTaggedRegion}"
-					Margin="8,8,8,8"
-					>
+				<ListView ItemsSource="{Binding SelectedSourceImage.TaggedRegions}" SelectedItem="{Binding SelectedTaggedRegion}" Margin="7,6,2,10">
 					<ListView.ItemsPanel>
 						<ItemsPanelTemplate>
-							<WrapPanel Width="{Binding (FrameworkElement.ActualWidth), RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}"
-                                   ItemWidth="{Binding (ListView.View).ItemWidth, RelativeSource={RelativeSource AncestorType=ListView}}"
-                                   ItemHeight="{Binding (ListView.View).ItemHeight, RelativeSource={RelativeSource AncestorType=ListView}}" />
+							<WrapPanel Width="{Binding (FrameworkElement.ActualWidth), RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}" ItemWidth="{Binding (ListView.View).ItemWidth, RelativeSource={RelativeSource AncestorType=ListView}}" ItemHeight="{Binding (ListView.View).ItemHeight, RelativeSource={RelativeSource AncestorType=ListView}}" />
 						</ItemsPanelTemplate>
 					</ListView.ItemsPanel>
 					<ListView.ItemTemplate>
 						<DataTemplate>
-							<DockPanel
-                                HorizontalAlignment="Stretch"
-                                MaxWidth="600"
-								MinHeight="200"
-								MinWidth="320"
-                                MaxHeight="200">
+							<DockPanel HorizontalAlignment="Stretch" MaxWidth="600" MinHeight="200" MinWidth="320" MaxHeight="200">
 								<TextBlock DockPanel.Dock="Top">
-                                   <Label Content="{Binding Tag}"
-                                           />
-                                   <TextBox HorizontalAlignment="Right"
-                                           Text="{Binding Region}"
-                                           />
-								</TextBlock>
-
+                                   <Label Content="{Binding Tag}" />
+                                   <TextBox HorizontalAlignment="Right" Text="{Binding Region}" /></TextBlock>
 								<Border BorderBrush="LightGray" BorderThickness="4" CornerRadius="4" Padding="5,5,5,5" Margin="4,4,4,4">
-									<Image Source="{Binding Image}"
-									   HorizontalAlignment="Stretch"
-									   Width="320"
-                                       Stretch="Uniform"/>
+									<Image Source="{Binding Image}" HorizontalAlignment="Stretch" Width="320" Stretch="Uniform" />
 								</Border>
-
 							</DockPanel>
-
 						</DataTemplate>
 					</ListView.ItemTemplate>
 				</ListView>
-
-
+				
 			</Grid>
-
+			<ListView x:Name="sourceImageListView" ItemsSource="{Binding Session.SourceImages}" SelectedItem="{Binding SelectedSourceImage}" Margin="6,6,16,7">
+				<ListView.ContextMenu>
+					<ContextMenu>
+						<MenuItem Header="Duplicate"
+								  Command="{Binding CloneSourceImageCommand}"
+								  CommandParameter="{Binding SelectedSourceImage}"/>
+					</ContextMenu>
+				</ListView.ContextMenu>
+				<ListView.View>
+					<GridView>
+						<GridViewColumn Header="Source Image" Width="auto">
+							<GridViewColumn.CellTemplate>
+								<DataTemplate>
+									<Image Source="{Binding Image}" ToolTip="{Binding Title}" MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ScrollContentPresenter}}}" MaxHeight="40" />
+								</DataTemplate>
+							</GridViewColumn.CellTemplate>
+						</GridViewColumn>
+						<GridViewColumn Header="Regions" Width="auto" DisplayMemberBinding="{Binding TaggedRegions.Count}"/>
+					</GridView>
+				</ListView.View>
+			</ListView>
 		</Grid>
 	</DockPanel>
 

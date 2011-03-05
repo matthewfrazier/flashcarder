@@ -46,49 +46,49 @@
 			<Border >
 				<DockPanel DataContext="{Binding CardsOnPage[0]}">
 					<Label Content="{Binding Header}"/>
-					<Image Source="{Binding ImageUrl}"/>
+					<Image Source="{Binding Image}"/>
 				</DockPanel>
 			</Border>
 			<Border >
 				<DockPanel DataContext="{Binding CardsOnPage[1]}">
 					<Label Content="{Binding Header}"/>
-					<Image Source="{Binding ImageUrl}"/>
+					<Image Source="{Binding Image}"/>
 				</DockPanel>
 			</Border>
 			<Border >
 				<DockPanel DataContext="{Binding CardsOnPage[2]}">
 					<Label Content="{Binding Header}"/>
-					<Image Source="{Binding ImageUrl}"/>
+					<Image Source="{Binding Image}"/>
 				</DockPanel>
 			</Border>
 			<Border >
 				<DockPanel DataContext="{Binding CardsOnPage[3]}">
 					<Label Content="{Binding Header}"/>
-					<Image Source="{Binding ImageUrl}"/>
+					<Image Source="{Binding Image}"/>
 				</DockPanel>
 			</Border>
 			<Border >
 				<DockPanel DataContext="{Binding CardsOnPage[4]}">
 					<Label Content="{Binding Header}"/>
-					<Image Source="{Binding ImageUrl}"/>
+					<Image Source="{Binding Image}"/>
 				</DockPanel>
 			</Border>
 			<Border >
 				<DockPanel DataContext="{Binding CardsOnPage[5]}">
 					<Label Content="{Binding Header}"/>
-					<Image Source="{Binding ImageUrl}"/>
+					<Image Source="{Binding Image}"/>
 				</DockPanel>
 			</Border>
 			<Border >
 				<DockPanel DataContext="{Binding CardsOnPage[6]}">
 					<Label Content="{Binding Header}"/>
-					<Image Source="{Binding ImageUrl}"/>
+					<Image Source="{Binding Image}"/>
 				</DockPanel>
 			</Border>
 			<Border >
 				<DockPanel DataContext="{Binding CardsOnPage[7]}">
 					<Label Content="{Binding Header}"/>
-					<Image Source="{Binding ImageUrl}"/>
+					<Image Source="{Binding Image}"/>
 				</DockPanel>
 			</Border>
 		</UniformGrid>

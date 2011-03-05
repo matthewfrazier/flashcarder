@@ -249,6 +249,19 @@ namespace Protomeme
 				this.PropertyChanged += new PropertyChangedEventHandler(TaggedRegion_PropertyChanged);
 			}
 
+			public TaggedRegion Clone()
+			{
+				var tr = new TaggedRegion()
+				{
+					Identifier = this.Identifier,
+					Image = this.Image.Clone(),
+					ImageUrl = this.ImageUrl,
+					Region = this.Region,
+					Tag = this.Tag
+				};
+				return tr;
+			}
+
 			void TaggedRegion_PropertyChanged(object sender, PropertyChangedEventArgs e)
 			{
 				switch (e.PropertyName)
@@ -418,12 +431,14 @@ namespace Protomeme
 		#endregion
 
 		protected virtual ObservableCollection<TaggedRegion>
-			GetDefaultTaggedRegions()
+			GetDefaultTaggedRegions(SourceImage sourceImage)
 		{
 			var front = this.Session.FactoryTaggedRegion();
 			front.Tag = "front";
+			front.SourceImage = sourceImage;
 			var back = this.Session.FactoryTaggedRegion();
 			back.Tag = "back";
+			back.SourceImage = sourceImage;
 			return new ObservableCollection<TaggedRegion>()
 			{
 				front,back
@@ -444,7 +459,8 @@ namespace Protomeme
 					if (this.SelectedSourceImage.TaggedRegions == null
 						|| this.SelectedSourceImage.TaggedRegions.Count == 0)
 					{
-						this.SelectedSourceImage.TaggedRegions = this.GetDefaultTaggedRegions();
+						this.SelectedSourceImage.TaggedRegions = this.GetDefaultTaggedRegions(
+							this.SelectedSourceImage);
 					}
 
 					if (this.SelectedSourceImage.TaggedRegions.Count > 0)
@@ -709,8 +725,15 @@ namespace Protomeme
 			{
 				var paths = parameter as IEnumerable<string>;
 				if (paths == null)
-					return;
-
+				{
+					var ofd = new Microsoft.Win32.OpenFileDialog();
+					ofd.Filter = "Images|*.png";
+					ofd.Multiselect = true;
+					var result = ofd.ShowDialog();
+					if (result == null || !result.Value)
+						return;
+					paths = ofd.FileNames;
+				}
 				this.LoadSourceImagesFromFiles(paths);
 			}
 
@@ -741,13 +764,16 @@ namespace Protomeme
 				{
 					try
 					{
-						this.ViewModel.Session.SourceImages.Add(
-							new SourceImage()
+						var si = new SourceImage()
 							{
-								Session = this.ViewModel.Session,
 								ImageUrl = path,
-								Title = System.IO.Path.GetFileNameWithoutExtension(path)
-							});
+								Title = System.IO.Path.GetFileNameWithoutExtension(path),
+								Session = this.ViewModel.Session,
+								
+							};
+						si.TaggedRegions = this.ViewModel.GetDefaultTaggedRegions(si);
+						this.ViewModel.Session.SourceImages.Add(
+							si);
 					}
 					catch (Exception ex)
 					{
@@ -1004,11 +1030,12 @@ namespace Protomeme
 			{
 			}
 
-			public PageContent CreateFlashCardPage(int pagenum, int cardsPerPage, string tag, FlowDirection direction)
+			public PageContent CreateFlashCardPage(
+				List<SourceImage> images,
+				int pagenum, int cardsPerPage, string tag, FlowDirection direction)
 			{
 				FixedPage fixedPage = new FixedPage();
 				PageContent pageContent = new PageContent();
-				var images = this.ViewModel.Session.SourceImages.ToList();
 				//Set up the WPF Control to be printed
 				FlashCardPrintPage page = new FlashCardPrintPage();
 				page.PrintInfo = new FlashCardPrintPage.PageInfo()
@@ -1031,21 +1058,27 @@ namespace Protomeme
 				return pageContent;
 			}
 
-			public FixedDocument CreateFlashCardDocument()
+			public FixedDocument CreateFlashCardDocument(ICollection<SourceImage> sources)
 			{
+				var images = sources;
+				if (images == null)
+					images = this.ViewModel.Session.SourceImages;
 				FixedDocument fixedDoc = new FixedDocument();
 				int cardsPerPage = 8;
 				//batch images into buckets of card size
 
 				for (int pagenum = 0;
-					pagenum < this.ViewModel.Session.SourceImages.Count / cardsPerPage;
+					pagenum <= images.Count / cardsPerPage;
 					pagenum++)
 				{
+					var list = images.ToList();
 					var frontPage = CreateFlashCardPage(
+						list,
 						pagenum, cardsPerPage, "front", FlowDirection.LeftToRight);
 					fixedDoc.Pages.Add(frontPage);
 
 					var backPage = CreateFlashCardPage(
+						list,
 						pagenum, cardsPerPage, "back", FlowDirection.RightToLeft);
 					fixedDoc.Pages.Add(backPage);
 				}
@@ -1072,8 +1105,15 @@ namespace Protomeme
 			{
 				try
 				{
-					var doc = CreateFlashCardDocument();
-					this.ResultDocument = doc;
+					
+					var selobjs = parameter as ICollection<object>;
+					if (selobjs != null)
+					{
+						var doc = CreateFlashCardDocument(
+							new ObservableCollection<SourceImage>(
+							selobjs.Cast<SourceImage>()));
+						this.ResultDocument = doc;
+					}
 				}
 				catch (Exception ex)
 				{
@@ -1239,18 +1279,27 @@ namespace Protomeme
 			}
 			public override bool CanExecute(object parameter)
 			{
-				return base.CanExecute(parameter)
-					&& Clipboard.ContainsImage();
+				return base.CanExecute(parameter);
 			}
 			public override void Execute(object parameter)
 			{
-				var image = Clipboard.GetImage();
-				this.ViewModel.Session.SourceImages.Add(
-					new SourceImage()
-					{
-						Session = this.ViewModel.Session,
-						Image = (BitmapImage)image
-					});
+				try
+				{
+					var image = (System.Windows.Interop.InteropBitmap)Clipboard.GetImage();
+					if (image == null)
+						return;
+					this.ViewModel.Session.SourceImages.Add(
+						new SourceImage()
+						{
+							Session = this.ViewModel.Session,
+							Image = image.Clone()
+						});
+				}
+				catch (Exception ex)
+				{
+					this.ViewModel.ErrorCollector.Add(new KeyValuePair<object, Exception>(
+						"Clipboard", ex));
+				}
 			}
 		}
 		PasteImageFromClipboardViewModelCommand _PasteImageFromClipboardCommand;
@@ -1266,6 +1315,35 @@ namespace Protomeme
 			}
 		}
 		#endregion
+
+		#region public ICommand CloneSourceImageViewModelCommand
+		public class CloneSourceImageViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
+		{
+			public CloneSourceImageViewModelCommand(InstantCardsViewModel viewModel)
+				: base(viewModel)
+			{
+			}
+			public override void Execute(object parameter)
+			{
+				var si = parameter as SourceImage;
+				var newsi = si.Clone();
+				this.ViewModel.Session.SourceImages.Add(newsi);
+			}
+		}
+		CloneSourceImageViewModelCommand _CloneSourceImageCommand;
+		public System.Windows.Input.ICommand CloneSourceImageCommand
+		{
+			get
+			{
+				if (this._CloneSourceImageCommand == null)
+				{
+					this._CloneSourceImageCommand = new CloneSourceImageViewModelCommand(this);
+				}
+				return this._CloneSourceImageCommand;
+			}
+		}
+		#endregion
+
 
 		public class SessionImageBase : INotifyPropertyChanged
 		{
@@ -1474,6 +1552,22 @@ namespace Protomeme
 			{
 				this.TaggedRegions = new ObservableCollection<TaggedRegion>();
 				this.TaggedRegions.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler(TaggedRegions_CollectionChanged);
+			}
+
+			public SourceImage Clone()
+			{
+				var si = new SourceImage()
+				{
+					ImageUrl = this.ImageUrl,
+					Image = this.Image.Clone(),
+					Session = this.Session,
+					Title = this.Title,
+				};
+				foreach (var tr in this.TaggedRegions)
+				{
+					si.TaggedRegions.Add(tr.Clone());
+				}
+				return si;
 			}
 
 			void TaggedRegions_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
