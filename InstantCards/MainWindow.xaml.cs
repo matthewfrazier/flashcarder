@@ -71,7 +71,7 @@ namespace Protomeme
 			public override void Execute(object parameter)
 			{
 				this.ViewModel.Model.PrintCommand.Execute(parameter);
-				var pc = this.ViewModel.Model.PrintCommand as FlashCardMakerViewModel.PrintFlashCardMakerViewModelCommand;
+				var pc = this.ViewModel.Model.PrintCommand as InstantCardsViewModel.PrintFlashCardMakerViewModelCommand;
 				pc.Execute(null);
 				PrintPreview pv = new PrintPreview();
 				pv.DataContext = pc.ResultDocument;
@@ -93,7 +93,7 @@ namespace Protomeme
 		}
 		#endregion
 
-		public Protomeme.FlashCardMakerViewModel Model { get; set; }
+		public Protomeme.InstantCardsViewModel Model { get; set; }
 
 		#region Command Line Handler
 		protected virtual void ExecuteCommandLine()
@@ -138,7 +138,7 @@ namespace Protomeme
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
-			this.Model = new Protomeme.FlashCardMakerViewModel();
+			this.Model = new Protomeme.InstantCardsViewModel();
 			this.DataContext = this.Model;
 			this.ExecuteCommandLine();
 		}

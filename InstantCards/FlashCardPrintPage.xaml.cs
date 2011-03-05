@@ -218,8 +218,8 @@ namespace Protomeme
 			}
 			#endregion
 			#region SourceImages (INotifyPropertyChanged Property)
-			private IList<FlashCardMakerViewModel.SourceImage> _SourceImages;
-			public IList<FlashCardMakerViewModel.SourceImage> SourceImages
+			private IList<InstantCardsViewModel.SourceImage> _SourceImages;
+			public IList<InstantCardsViewModel.SourceImage> SourceImages
 			{
 				get { return this._SourceImages; }
 				set

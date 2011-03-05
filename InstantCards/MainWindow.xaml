@@ -86,8 +86,8 @@
 				Grid.Column="0">
 				<ListView 
                   x:Name="sourceImageListView"
-                      ItemsSource="{Binding SourceImages}"
-                SelectedItem="{Binding SelectedSourceImage}"
+                  ItemsSource="{Binding Session.SourceImages}"
+				SelectedItem="{Binding SelectedSourceImage}"
                 >
 					<ListView.View>
 						<GridView>
@@ -96,7 +96,7 @@
 								<GridViewColumn.CellTemplate>
 									<DataTemplate>
 										<Image 
-								Source="{Binding ImageUrl}" 
+								Source="{Binding Image}" 
 								ToolTip="{Binding Title}"
 								MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ScrollContentPresenter}}}"
 								MaxHeight="40"
@@ -137,7 +137,7 @@
 					x:Name="imageCropper"
 					
 					Margin="16,16,16,16"
-					Source="{Binding SelectedSourceImage.ImageUrl}"
+					Source="{Binding SelectedSourceImage.Image}"
 					CroppedImageBounds="{Binding SelectedTaggedRegion.Region,Mode=TwoWay}"
                     MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}"
 					/>
@@ -180,7 +180,7 @@
 								</TextBlock>
 
 								<Border BorderBrush="LightGray" BorderThickness="4" CornerRadius="4" Padding="5,5,5,5" Margin="4,4,4,4">
-									<Image Source="{Binding ImageUrl}"
+									<Image Source="{Binding Image}"
 									   HorizontalAlignment="Stretch"
 									   Width="320"
                                        Stretch="Uniform"/>

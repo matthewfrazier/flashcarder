@@ -9,21 +9,25 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Xml.Serialization;
 using System.Windows.Documents;
+using System.Windows.Media;
+using System.Globalization;
+using System.Runtime;
+using System.Windows.Data;
 
 namespace Protomeme
 {
-	public class FlashCardMakerViewModel : INotifyPropertyChanged
+	public class InstantCardsViewModel : INotifyPropertyChanged
 	{
-
-		public FlashCardMakerViewModel()
+		public InstantCardsViewModel()
 		{
 			this.ErrorCollector = new BoundErrorCollector();
-
 			this.PropertyChanged += new PropertyChangedEventHandler(FlashCardMakerViewModel_PropertyChanged);
 		}
 
+		#region Persistence
 		System.Xml.Serialization.XmlSerializer xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(FlashCardSession));
-
+		#endregion
+		#region Error Reporting
 		public class BoundErrorCollector :
 			ObservableCollection<KeyValuePair<object, Exception>>,
 			IErrorCollector,
@@ -235,10 +239,31 @@ namespace Protomeme
 
 			#endregion
 		}
+		#endregion
 
 		public class TaggedRegion :
-			INotifyPropertyChanged
+			SessionImageBase
 		{
+			public TaggedRegion()
+			{
+				this.PropertyChanged += new PropertyChangedEventHandler(TaggedRegion_PropertyChanged);
+			}
+
+			void TaggedRegion_PropertyChanged(object sender, PropertyChangedEventArgs e)
+			{
+				switch (e.PropertyName)
+				{
+					case "SourceImage":
+					case "Region":
+						{
+							if (this.Region != null && this.SourceImage != null)
+							{
+								this.Image = this.SourceImage.CropImage(this.Region);
+							}
+						}
+						break;
+				}
+			}
 			#region INotifyPropertyChanged
 
 			/// <summary>
@@ -297,6 +322,23 @@ namespace Protomeme
 			}
 
 			#endregion
+
+			#region SourceImage (INotifyPropertyChanged Property)
+			private SourceImage _SourceImage;
+			[XmlIgnore]
+			public SourceImage SourceImage
+			{
+				get { return this._SourceImage; }
+				set
+				{
+					if (value == _SourceImage)
+						return;
+
+					this._SourceImage = value;
+					this.OnPropertyChanged("SourceImage");
+				}
+			}
+			#endregion
 			#region Tag (INotifyPropertyChanged Property)
 			private string _Tag;
 			public string Tag
@@ -327,37 +369,6 @@ namespace Protomeme
 				}
 			}
 			#endregion
-			#region ImageUrl (INotifyPropertyChanged Property)
-			private string _ImageUrl;
-			public string ImageUrl
-			{
-				get { return this._ImageUrl; }
-				set
-				{
-					if (value == _ImageUrl)
-						return;
-
-					this._ImageUrl = value;
-					this.OnPropertyChanged("ImageUrl");
-				}
-			}
-			#endregion
-			#region Image (INotifyPropertyChanged Property)
-			private BitmapSource _Image;
-			[XmlIgnore]
-			public BitmapSource Image
-			{
-				get { return this._Image; }
-				set
-				{
-					if (value == _Image)
-						return;
-
-					this._Image = value;
-					this.OnPropertyChanged("Image");
-				}
-			}
-			#endregion
 			#region Identifier (INotifyPropertyChanged Property)
 			private string _Identifier;
 			public string Identifier
@@ -375,7 +386,6 @@ namespace Protomeme
 			#endregion
 		}
 
-
 		#region ErrorCollector (INotifyPropertyChanged Property)
 		private IErrorCollector _ErrorCollector;
 		public IErrorCollector ErrorCollector
@@ -391,20 +401,32 @@ namespace Protomeme
 			}
 		}
 		#endregion
+		#region StatusMessage (INotifyPropertyChanged Property)
+		private object _StatusMessage;
+		public object StatusMessage
+		{
+			get { return this._StatusMessage; }
+			set
+			{
+				if (value == _StatusMessage)
+					return;
+
+				this._StatusMessage = value;
+				this.OnPropertyChanged("StatusMessage");
+			}
+		}
+		#endregion
 
 		protected virtual ObservableCollection<TaggedRegion>
 			GetDefaultTaggedRegions()
 		{
+			var front = this.Session.FactoryTaggedRegion();
+			front.Tag = "front";
+			var back = this.Session.FactoryTaggedRegion();
+			back.Tag = "back";
 			return new ObservableCollection<TaggedRegion>()
 			{
-				new TaggedRegion()
-				{
-					Tag="front",
-				},
-				new TaggedRegion()
-				{
-					Tag="back"
-				}
+				front,back
 			};
 		}
 
@@ -429,21 +451,41 @@ namespace Protomeme
 						this.SelectedTaggedRegion = this.SelectedSourceImage.TaggedRegions[0];
 					break;
 				case "Session":
-					if (this.Session.SourceImages != null)
-					{
-						this.SourceImages = new ObservableCollection<SourceImage>(
-							this.Session.SourceImages);
-					}
-					else
-					{
-						this.SourceImages = new ObservableCollection<SourceImage>();
-					}
 					break;
 			}
 		}
 
 		public class FlashCardSession : INotifyPropertyChanged
 		{
+			public FlashCardSession()
+			{
+				this.SourceImages = new ObservableCollection<SourceImage>();
+				this.SourceImages.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler(SourceImages_CollectionChanged);
+			}
+
+			public TaggedRegion FactoryTaggedRegion()
+			{
+				return new TaggedRegion()
+				{
+					Session = this
+				};
+			}
+
+			void SourceImages_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+			{
+				switch (e.Action)
+				{
+					case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+						foreach (var item in e.NewItems)
+						{
+							var si = item as SourceImage;
+							if (si == null)
+								continue;
+							si.Session = this;
+						}
+						break;
+				}
+			}
 			#region INotifyPropertyChanged
 
 			/// <summary>
@@ -534,8 +576,8 @@ namespace Protomeme
 			}
 			#endregion
 			#region SourceImages (INotifyPropertyChanged Property)
-			private List<SourceImage> _SourceImages;
-			public List<SourceImage> SourceImages
+			private ObservableCollection<SourceImage> _SourceImages;
+			public ObservableCollection<SourceImage> SourceImages
 			{
 				get { return this._SourceImages; }
 				set
@@ -624,21 +666,7 @@ namespace Protomeme
 			}
 		}
 		#endregion
-		#region SourceImages (INotifyPropertyChanged Property)
-		private ObservableCollection<SourceImage> _SourceImages;
-		public ObservableCollection<SourceImage> SourceImages
-		{
-			get { return this._SourceImages; }
-			set
-			{
-				if (value == _SourceImages)
-					return;
-
-				this._SourceImages = value;
-				this.OnPropertyChanged("SourceImages");
-			}
-		}
-		#endregion
+		
 		#region SelectedSourceImage (INotifyPropertyChanged Property)
 		private SourceImage _SelectedSourceImage;
 		public SourceImage SelectedSourceImage
@@ -670,122 +698,10 @@ namespace Protomeme
 		}
 		#endregion
 
-		#region FlashCardMakerViewModel Command Base
-		public abstract class FlashCardMakerViewModelCommandBase : System.Windows.Input.ICommand,
-			INotifyPropertyChanged
-		{
-			#region INotifyPropertyChanged
-
-			/// <summary>
-			/// The PropertyChanged event is used by consuming code
-			/// (like WPF's binding infrastructure) to detect when
-			/// a value has changed.
-			/// </summary>
-			public event PropertyChangedEventHandler PropertyChanged;
-
-			/// <summary>
-			/// Raise the PropertyChanged event for the 
-			/// specified property.
-			/// </summary>
-			/// <param name="propertyName">
-			/// A string representing the name of 
-			/// the property that changed.</param>
-			/// <remarks>
-			/// Only raise the event if the value of the property 
-			/// has changed from its previous value</remarks>
-			protected void OnPropertyChanged(string propertyName)
-			{
-				// Validate the property name in debug builds
-				VerifyProperty(propertyName);
-
-				if (null != PropertyChanged)
-				{
-					PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-				}
-			}
-
-			/// <summary>
-			/// Verifies whether the current class provides a property with a given
-			/// name. This method is only invoked in debug builds, and results in
-			/// a runtime exception if the <see cref="OnPropertyChanged"/> method
-			/// is being invoked with an invalid property name. This may happen if
-			/// a property's name was changed but not the parameter of the property's
-			/// invocation of <see cref="OnPropertyChanged"/>.
-			/// </summary>
-			/// <param name="propertyName">The name of the changed property.</param>
-			[System.Diagnostics.Conditional("DEBUG")]
-			private void VerifyProperty(string propertyName)
-			{
-				Type type = this.GetType();
-
-				// Look for a *public* property with the specified name
-				System.Reflection.PropertyInfo pi = type.GetProperty(propertyName);
-				if (pi == null)
-				{
-					// There is no matching property - notify the developer
-					string msg = "OnPropertyChanged was invoked with invalid " +
-									"property name {0}. {0} is not a public " +
-									"property of {1}.";
-					msg = String.Format(msg, propertyName, type.FullName);
-					System.Diagnostics.Debug.Fail(msg);
-				}
-			}
-
-			#endregion
-
-			#region Description (INotifyPropertyChanged Property)
-			private string _Description;
-			public string Description
-			{
-				get { return this._Description; }
-				set
-				{
-					if (value == _Description)
-						return;
-
-					this._Description = value;
-					this.OnPropertyChanged("Description");
-				}
-			}
-			#endregion
-			public FlashCardMakerViewModelCommandBase(FlashCardMakerViewModel viewModel)
-			{
-				this._viewModel = viewModel;
-			}
-			#region FlashCardMakerViewModel ViewModel
-			private FlashCardMakerViewModel _viewModel;
-			public virtual FlashCardMakerViewModel ViewModel
-			{
-				protected get { return this._viewModel; }
-				set { this._viewModel = value; }
-			}
-			#endregion
-
-			#region ICommand Members
-			public virtual bool CanExecute(object parameter)
-			{
-				return (this.ViewModel != null);
-			}
-
-			public virtual event EventHandler CanExecuteChanged;
-
-			protected virtual void OnCanExecuteChanged()
-			{
-				var handler = this.CanExecuteChanged;
-				if (handler == null)
-					return;
-				handler(this, EventArgs.Empty);
-			}
-
-			public abstract void Execute(object parameter);
-
-			#endregion
-		}
-		#endregion
 		#region public ICommand LoadSourceImagesFromFilesCommand
-		public class LoadSourceImagesFromFilesFlashCardMakerViewModelCommand : FlashCardMakerViewModelCommandBase
+		public class LoadSourceImagesFromFilesFlashCardMakerViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
 		{
-			public LoadSourceImagesFromFilesFlashCardMakerViewModelCommand(FlashCardMakerViewModel viewModel)
+			public LoadSourceImagesFromFilesFlashCardMakerViewModelCommand(InstantCardsViewModel viewModel)
 				: base(viewModel)
 			{
 			}
@@ -796,11 +712,6 @@ namespace Protomeme
 					return;
 
 				this.LoadSourceImagesFromFiles(paths);
-
-				if (this.ViewModel.SourceImages == null)
-					this.ViewModel.SourceImages = new ObservableCollection<SourceImage>();
-
-
 			}
 
 			#region Errors (INotifyPropertyChanged Property)
@@ -818,19 +729,22 @@ namespace Protomeme
 				}
 			}
 			#endregion
-
+			public override bool CanExecute(object parameter)
+			{
+				return base.CanExecute(parameter)
+					&& this.ViewModel.Session != null;
+			}
 			public void LoadSourceImagesFromFiles(IEnumerable<string> paths)
 			{
 				this.Errors = new ObservableCollection<KeyValuePair<string, Exception>>();
-				if (this.ViewModel.SourceImages == null)
-					this.ViewModel.SourceImages = new ObservableCollection<SourceImage>();
 				foreach (string path in paths)
 				{
 					try
 					{
-						this.ViewModel.SourceImages.Add(
+						this.ViewModel.Session.SourceImages.Add(
 							new SourceImage()
 							{
+								Session = this.ViewModel.Session,
 								ImageUrl = path,
 								Title = System.IO.Path.GetFileNameWithoutExtension(path)
 							});
@@ -858,21 +772,22 @@ namespace Protomeme
 		}
 		#endregion
 		#region public ICommand ClearImagesCommand
-		public class ClearImagesFlashCardMakerViewModelCommand : FlashCardMakerViewModelCommandBase
+		public class ClearImagesFlashCardMakerViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
 		{
-			public ClearImagesFlashCardMakerViewModelCommand(FlashCardMakerViewModel viewModel)
+			public ClearImagesFlashCardMakerViewModelCommand(InstantCardsViewModel viewModel)
 				: base(viewModel)
 			{
 			}
 			public override bool CanExecute(object parameter)
 			{
 				return base.CanExecute(parameter)
-					&& this.ViewModel.SourceImages != null
-					&& this.ViewModel.SourceImages.Count > 0;
+					&& this.ViewModel.Session != null
+					&& this.ViewModel.Session.SourceImages != null
+					&& this.ViewModel.Session.SourceImages.Count > 0;
 			}
 			public override void Execute(object parameter)
 			{
-				this.ViewModel.SourceImages.Clear();
+				this.ViewModel.Session.SourceImages.Clear();
 			}
 		}
 		ClearImagesFlashCardMakerViewModelCommand _ClearImagesCommand;
@@ -889,9 +804,9 @@ namespace Protomeme
 		}
 		#endregion
 		#region public ICommand SaveCommand
-		public class SaveFlashCardMakerViewModelCommand : FlashCardMakerViewModelCommandBase
+		public class SaveFlashCardMakerViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
 		{
-			public SaveFlashCardMakerViewModelCommand(FlashCardMakerViewModel viewModel)
+			public SaveFlashCardMakerViewModelCommand(InstantCardsViewModel viewModel)
 				: base(viewModel)
 			{
 			}
@@ -914,13 +829,13 @@ namespace Protomeme
 							return;
 						path = saveDialog.FileName;
 					}
-					this.Description = String.Format("Saving {0}", path);
+					this.ViewModel.StatusMessage = String.Format("Saving {0}", path);
 					var session = this.ViewModel.Session;
 					if (session == null)
 					{
 						session = new FlashCardSession();
 					}
-					session.SourceImages = this.ViewModel.SourceImages.ToList();
+					session.SourceImages = this.ViewModel.Session.SourceImages;
 					using (var xw = System.Xml.XmlWriter.Create(path))
 					{
 						this.ViewModel.xmlSerializer.Serialize(xw, session);
@@ -929,7 +844,7 @@ namespace Protomeme
 
 					this.ViewModel.Session = session;
 
-					this.Description = String.Format("Saved {0}", path);
+					this.ViewModel.StatusMessage = String.Format("Saved {0}", path);
 				}
 				catch (Exception ex)
 				{
@@ -953,9 +868,9 @@ namespace Protomeme
 		}
 		#endregion
 		#region public ICommand OpenSessionCommand
-		public class OpenSessionFlashCardMakerViewModelCommand : FlashCardMakerViewModelCommandBase
+		public class OpenSessionFlashCardMakerViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
 		{
-			public OpenSessionFlashCardMakerViewModelCommand(FlashCardMakerViewModel viewModel)
+			public OpenSessionFlashCardMakerViewModelCommand(InstantCardsViewModel viewModel)
 				: base(viewModel)
 			{
 			}
@@ -1000,9 +915,9 @@ namespace Protomeme
 		}
 		#endregion
 		#region public ICommand ExportCommand
-		public class ExportFlashCardMakerViewModelCommand : FlashCardMakerViewModelCommandBase
+		public class ExportFlashCardMakerViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
 		{
-			public ExportFlashCardMakerViewModelCommand(FlashCardMakerViewModel viewModel)
+			public ExportFlashCardMakerViewModelCommand(InstantCardsViewModel viewModel)
 				: base(viewModel)
 			{
 			}
@@ -1082,9 +997,9 @@ namespace Protomeme
 		}
 		#endregion
 		#region public ICommand PrintCommand
-		public class PrintFlashCardMakerViewModelCommand : FlashCardMakerViewModelCommandBase
+		public class PrintFlashCardMakerViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
 		{
-			public PrintFlashCardMakerViewModelCommand(FlashCardMakerViewModel viewModel)
+			public PrintFlashCardMakerViewModelCommand(InstantCardsViewModel viewModel)
 				: base(viewModel)
 			{
 			}
@@ -1093,7 +1008,7 @@ namespace Protomeme
 			{
 				FixedPage fixedPage = new FixedPage();
 				PageContent pageContent = new PageContent();
-				var images = this.ViewModel.SourceImages.ToList();
+				var images = this.ViewModel.Session.SourceImages.ToList();
 				//Set up the WPF Control to be printed
 				FlashCardPrintPage page = new FlashCardPrintPage();
 				page.PrintInfo = new FlashCardPrintPage.PageInfo()
@@ -1123,7 +1038,7 @@ namespace Protomeme
 				//batch images into buckets of card size
 
 				for (int pagenum = 0;
-					pagenum < this.ViewModel.SourceImages.Count / cardsPerPage;
+					pagenum < this.ViewModel.Session.SourceImages.Count / cardsPerPage;
 					pagenum++)
 				{
 					var frontPage = CreateFlashCardPage(
@@ -1181,9 +1096,9 @@ namespace Protomeme
 		}
 		#endregion
 		#region public ICommand PackageCommand
-		public class PackageFlashCardMakerViewModelCommand : FlashCardMakerViewModelCommandBase
+		public class PackageFlashCardMakerViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
 		{
-			public PackageFlashCardMakerViewModelCommand(FlashCardMakerViewModel viewModel)
+			public PackageFlashCardMakerViewModelCommand(InstantCardsViewModel viewModel)
 				: base(viewModel)
 			{
 			}
@@ -1205,7 +1120,7 @@ namespace Protomeme
 				}
 				return destpath;
 			}
-			
+
 			public override void Execute(object parameter)
 			{
 				var destpath = parameter as string;
@@ -1229,11 +1144,11 @@ namespace Protomeme
 				{
 					SessionPath = this.ViewModel.Session.SessionPath,
 					Title = this.ViewModel.Session.Title,
-					SourceImages = new List<SourceImage>()
+					SourceImages = new ObservableCollection<SourceImage>()
 				};
 
 				//gather images at destpath, rename if needed, update session properties
-				foreach (var si in this.ViewModel.SourceImages)
+				foreach (var si in this.ViewModel.Session.SourceImages)
 				{
 					try
 					{
@@ -1253,12 +1168,11 @@ namespace Protomeme
 								var newtr = CopyToRelativePath(tr.ImageUrl,
 									destdir);
 								System.IO.File.Copy(tr.ImageUrl, newtr);
-								newsi.TaggedRegions.Add(new TaggedRegion()
-								{
-									ImageUrl = newtr,
-									Region = tr.Region,
-									Tag = tr.Tag
-								});
+								var trinst = this.ViewModel.Session.FactoryTaggedRegion();
+								trinst.ImageUrl = newtr;
+								trinst.Region = tr.Region;
+								trinst.Tag = tr.Tag;
+								newsi.TaggedRegions.Add(trinst);
 							}
 							catch (Exception ex)
 							{
@@ -1291,12 +1205,69 @@ namespace Protomeme
 			}
 		}
 		#endregion
+		#region public ICommand NewSessionViewModelCommand
+		public class NewSessionViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
+		{
+			public NewSessionViewModelCommand(InstantCardsViewModel viewModel)
+				: base(viewModel)
+			{
+			}
+			public override void Execute(object parameter)
+			{
+				throw new NotImplementedException();
+			}
+		}
+		NewSessionViewModelCommand _NewSessionCommand;
+		public System.Windows.Input.ICommand NewSessionCommand
+		{
+			get
+			{
+				if (this._NewSessionCommand == null)
+				{
+					this._NewSessionCommand = new NewSessionViewModelCommand(this);
+				}
+				return this._NewSessionCommand;
+			}
+		}
+		#endregion
+		#region public ICommand PasteImageFromClipboardViewModelCommand
+		public class PasteImageFromClipboardViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
+		{
+			public PasteImageFromClipboardViewModelCommand(InstantCardsViewModel viewModel)
+				: base(viewModel)
+			{
+			}
+			public override bool CanExecute(object parameter)
+			{
+				return base.CanExecute(parameter)
+					&& Clipboard.ContainsImage();
+			}
+			public override void Execute(object parameter)
+			{
+				var image = Clipboard.GetImage();
+				this.ViewModel.Session.SourceImages.Add(
+					new SourceImage()
+					{
+						Session = this.ViewModel.Session,
+						Image = (BitmapImage)image
+					});
+			}
+		}
+		PasteImageFromClipboardViewModelCommand _PasteImageFromClipboardCommand;
+		public System.Windows.Input.ICommand PasteImageFromClipboardCommand
+		{
+			get
+			{
+				if (this._PasteImageFromClipboardCommand == null)
+				{
+					this._PasteImageFromClipboardCommand = new PasteImageFromClipboardViewModelCommand(this);
+				}
+				return this._PasteImageFromClipboardCommand;
+			}
+		}
+		#endregion
 
-		/// <summary>
-		/// An image that can be tagged with regions that represent parts of
-		/// one or more flash cards
-		/// </summary>
-		public class SourceImage : INotifyPropertyChanged
+		public class SessionImageBase : INotifyPropertyChanged
 		{
 			#region INotifyPropertyChanged
 
@@ -1357,22 +1328,27 @@ namespace Protomeme
 
 			#endregion
 
-			#region Title (INotifyPropertyChanged Property)
-			private string _Title;
-			public string Title
+			public SessionImageBase()
 			{
-				get { return this._Title; }
+				this.PropertyChanged += new PropertyChangedEventHandler(SessionImageBase_PropertyChanged);
+			}
+
+			#region Session (INotifyPropertyChanged Property)
+			private FlashCardSession _Session;
+			[XmlIgnore]
+			public FlashCardSession Session
+			{
+				get { return this._Session; }
 				set
 				{
-					if (value == _Title)
+					if (value == _Session)
 						return;
 
-					this._Title = value;
-					this.OnPropertyChanged("Title");
+					this._Session = value;
+					this.OnPropertyChanged("Session");
 				}
 			}
 			#endregion
-
 			#region ImageUrl (INotifyPropertyChanged Property)
 			private string _ImageUrl;
 			public string ImageUrl
@@ -1388,7 +1364,148 @@ namespace Protomeme
 				}
 			}
 			#endregion
+			#region Image (INotifyPropertyChanged Property)
+			private BitmapSource _Image;
+			[XmlIgnore]
+			public BitmapSource Image
+			{
+				get { return this._Image; }
+				set
+				{
+					if (value == _Image)
+						return;
 
+					this._Image = value;
+					this.OnPropertyChanged("Image");
+				}
+			}
+			#endregion
+			#region LoadError (INotifyPropertyChanged Property)
+			private Exception _LoadError;
+			[XmlIgnore]
+			public Exception LoadError
+			{
+				get { return this._LoadError; }
+				set
+				{
+					if (value == _LoadError)
+						return;
+
+					this._LoadError = value;
+					this.OnPropertyChanged("LoadError");
+				}
+			}
+			#endregion
+
+			public void SaveImage(string path)
+			{
+				var enc = new PngBitmapEncoder();
+				enc.Frames.Add(BitmapFrame.Create(this.Image));
+				using (var fs = System.IO.File.Create(
+					path))
+				{
+					enc.Save(fs);
+				}
+			}
+
+			public CroppedBitmap CropImage(Int32Rect rect)
+			{
+				try
+				{
+					var cropped = new CroppedBitmap(
+									this.Image,
+									rect);
+					return cropped;
+				}
+				catch (Exception)
+				{
+					return null;
+				}
+			}
+
+			protected virtual void TryLoadImage(string path)
+			{
+				try
+				{
+					if (path == null)
+						throw new ArgumentNullException("path");
+
+					//if it's absolute and exists, just load it
+					if (!System.IO.File.Exists(path) && this.Session != null)
+					{
+						//it might be local to the session
+						string fn = System.IO.Path.GetFileName(this.ImageUrl);
+						string dir = System.IO.Path.GetDirectoryName(this.Session.SessionPath);
+						path = System.IO.Path.Combine(
+							dir, fn);
+					}
+					this.Image = new BitmapImage(
+						new Uri(path));
+				}
+				catch (Exception ex)
+				{
+					this.LoadError = ex;
+				}
+			}
+
+
+			void SessionImageBase_PropertyChanged(object sender, PropertyChangedEventArgs e)
+			{
+				switch (e.PropertyName)
+				{
+					case "Session":
+					case "ImageUrl":
+						if (this.Image == null)
+						{
+							this.TryLoadImage(this.ImageUrl);
+						}
+						break;
+				}
+			}
+		}
+
+		/// <summary>
+		/// An image that can be tagged with regions that represent parts of
+		/// one or more flash cards
+		/// </summary>
+		public class SourceImage : SessionImageBase
+		{
+			public SourceImage()
+			{
+				this.TaggedRegions = new ObservableCollection<TaggedRegion>();
+				this.TaggedRegions.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler(TaggedRegions_CollectionChanged);
+			}
+
+			void TaggedRegions_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+			{
+				switch (e.Action)
+				{
+					case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+						{
+							foreach (TaggedRegion tr in e.NewItems)
+							{
+								tr.SourceImage = this;
+							}
+						}
+						break;
+				}
+			}
+
+			#region Title (INotifyPropertyChanged Property)
+			private string _Title;
+			public string Title
+			{
+				get { return this._Title; }
+				set
+				{
+					if (value == _Title)
+						return;
+
+					this._Title = value;
+					this.OnPropertyChanged("Title");
+				}
+			}
+			#endregion
 			#region TaggedRegions (INotifyPropertyChanged Property)
 			private ObservableCollection<TaggedRegion> _TaggedRegions;
 			public ObservableCollection<TaggedRegion> TaggedRegions
