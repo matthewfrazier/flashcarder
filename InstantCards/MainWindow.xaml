@@ -51,6 +51,9 @@
 			<MenuItem Header="_Edit">
 				<MenuItem Header="_Paste" Command="{Binding PasteImageFromClipboardCommand}"/>
 			</MenuItem>
+			<MenuItem Header="_Quiz">
+				<MenuItem Header="_Start Quiz" Command="{Binding StartQuizCommand}"/>
+			</MenuItem>
 		</Menu>
 
 		<StatusBar DockPanel.Dock="Top"
@@ -118,16 +121,54 @@
 				</ListView>
 				
 			</Grid>
-			<ListView x:Name="sourceImageListView" ItemsSource="{Binding Session.SourceImages}" SelectedItem="{Binding SelectedSourceImage}" Margin="6,6,16,7">
-				<ListView.ContextMenu>
+			
+			<StackPanel>
+				<TextBox>
+					<local:WatermarkService.Watermark>
+						<TextBlock>Enter tags to filter</TextBlock>
+					</local:WatermarkService.Watermark>
+				</TextBox>
+					<ListView x:Name="sourceImageListView" ItemsSource="{Binding Session.SourceImages}" SelectedItem="{Binding SelectedSourceImage}" Margin="6,6,16,7">
+						<ListView.ContextMenu>
 					<ContextMenu>
-						<MenuItem Header="Duplicate"
+							<MenuItem Header="Duplicate"
 								  Command="{Binding CloneSourceImageCommand}"
 								  CommandParameter="{Binding SelectedSourceImage}"/>
-					</ContextMenu>
+							<Separator/>
+							<MenuItem Header="Tag" ItemsSource="{Binding AllTags}"
+									  Command="{Binding TagSelectedCommand}"
+									  CommandParameter="{Binding}"/>
+							<MenuItem>
+								<TextBox HorizontalAlignment="Stretch">
+									<local:WatermarkService.Watermark>
+										<TextBlock>Add new tag...</TextBlock>
+									</local:WatermarkService.Watermark>
+								</TextBox>
+							</MenuItem>
+						</ContextMenu>
 				</ListView.ContextMenu>
 				<ListView.View>
 					<GridView>
+						<GridViewColumn Header="Tags" Width="auto">
+							<GridViewColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding Tags}"/>
+								</DataTemplate>
+							</GridViewColumn.CellTemplate>
+						</GridViewColumn><GridViewColumn Header="Front" Width="auto">
+							<GridViewColumn.CellTemplate>
+								<DataTemplate>
+										<Image Source="{Binding TaggedRegions[front].Image}" MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ScrollContentPresenter}}}" MaxHeight="40" />
+								</DataTemplate>
+							</GridViewColumn.CellTemplate>
+						</GridViewColumn>
+						<GridViewColumn Header="Back" Width="auto">
+							<GridViewColumn.CellTemplate>
+								<DataTemplate>
+									<Image Source="{Binding TaggedRegions[back].Image}" MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ScrollContentPresenter}}}" MaxHeight="40" />
+								</DataTemplate>
+							</GridViewColumn.CellTemplate>
+						</GridViewColumn>
 						<GridViewColumn Header="Source Image" Width="auto">
 							<GridViewColumn.CellTemplate>
 								<DataTemplate>
@@ -135,10 +176,11 @@
 								</DataTemplate>
 							</GridViewColumn.CellTemplate>
 						</GridViewColumn>
-						<GridViewColumn Header="Regions" Width="auto" DisplayMemberBinding="{Binding TaggedRegions.Count}"/>
+						
 					</GridView>
 				</ListView.View>
 			</ListView>
+			</StackPanel>
 		</Grid>
 	</DockPanel>
 

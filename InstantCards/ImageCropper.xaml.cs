@@ -82,7 +82,10 @@ namespace Protomeme
 			
 			// add other initialization and cleanup code that is
 			// required by your control when changing the image source
-			//ApplyCroppedBounds(this.croppingAdorner);
+			if (e.OldValue != e.NewValue)
+			{
+				ApplyCroppedBounds(this.croppingAdorner);
+			}
 		}
 
 		protected virtual void InitCropping()

@@ -21,6 +21,9 @@ namespace Protomeme
 		public InstantCardsViewModel()
 		{
 			this.ErrorCollector = new BoundErrorCollector();
+			this.AllTags = new ObservableCollection<string>(
+				new string[]{"red","blue","green"});
+
 			this.PropertyChanged += new PropertyChangedEventHandler(FlashCardMakerViewModel_PropertyChanged);
 		}
 
@@ -430,7 +433,31 @@ namespace Protomeme
 		}
 		#endregion
 
-		protected virtual ObservableCollection<TaggedRegion>
+		#region AllTags (INotifyPropertyChanged Property)
+		private ObservableCollection<string> _AllTags;
+		public ObservableCollection<string> AllTags
+		{
+			get { return this._AllTags; }
+			set
+			{
+				if (value == _AllTags)
+					return;
+
+				this._AllTags = value;
+				this.OnPropertyChanged("AllTags");
+			}
+		}
+		#endregion
+
+		public class TaggedRegionCollection : ObservableCollection<TaggedRegion>
+		{
+			public TaggedRegion this[string tag]
+			{
+				get { return this.FirstOrDefault<TaggedRegion>(tr => tr.Tag == tag); }
+			}
+		}
+
+		protected virtual TaggedRegionCollection
 			GetDefaultTaggedRegions(SourceImage sourceImage)
 		{
 			var front = this.Session.FactoryTaggedRegion();
@@ -439,7 +466,7 @@ namespace Protomeme
 			var back = this.Session.FactoryTaggedRegion();
 			back.Tag = "back";
 			back.SourceImage = sourceImage;
-			return new ObservableCollection<TaggedRegion>()
+			return new TaggedRegionCollection()
 			{
 				front,back
 			};
@@ -1199,7 +1226,7 @@ namespace Protomeme
 						{
 							ImageUrl = newpath,
 							Title = si.Title,
-							TaggedRegions = new ObservableCollection<TaggedRegion>()
+							TaggedRegions = new TaggedRegionCollection()
 						};
 						foreach (var tr in si.TaggedRegions)
 						{
@@ -1315,6 +1342,42 @@ namespace Protomeme
 			}
 		}
 		#endregion
+		#region public ICommand TagSelectedViewModelCommand
+		public class TagSelectedViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
+		{
+			public TagSelectedViewModelCommand(InstantCardsViewModel viewModel)
+				: base(viewModel)
+			{
+			}
+			public override bool CanExecute(object parameter)
+			{
+				return base.CanExecute(parameter)
+					&& parameter is ICollection<object>
+					&& ((ICollection<object>)parameter).Count > 0;
+			}
+			public override void Execute(object parameter)
+			{
+				var selected = parameter as ICollection<object>;
+				foreach (SourceImage si in selected)
+				{
+					//si.Tags += 
+				}
+			}
+		}
+		TagSelectedViewModelCommand _TagSelectedCommand;
+		public System.Windows.Input.ICommand TagSelectedCommand
+		{
+			get
+			{
+				if (this._TagSelectedCommand == null)
+				{
+					this._TagSelectedCommand = new TagSelectedViewModelCommand(this);
+				}
+				return this._TagSelectedCommand;
+			}
+		}
+		#endregion
+
 
 		#region public ICommand CloneSourceImageViewModelCommand
 		public class CloneSourceImageViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
@@ -1340,6 +1403,52 @@ namespace Protomeme
 					this._CloneSourceImageCommand = new CloneSourceImageViewModelCommand(this);
 				}
 				return this._CloneSourceImageCommand;
+			}
+		}
+		#endregion
+		#region public ICommand StartQuizViewModelCommand
+		public class StartQuizViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
+		{
+			public StartQuizViewModelCommand(InstantCardsViewModel viewModel)
+				: base(viewModel)
+			{
+			}
+			public override void Execute(object parameter)
+			{
+				var qcol = new QuizViewModel.QuizCardCollection();
+				foreach(var sc in this.ViewModel.Session.SourceImages)
+				{
+					qcol.Add(new QuizViewModel.QuizCard()
+					{
+						Id = sc.ImageUrl,
+						SourceImage = sc,
+						IsKnown = false,
+					});
+				}
+				var qvm = new QuizViewModel()
+				{
+					AllCards = qcol,
+				};
+
+				var qw = new QuizListWindow();
+				if (qvm.AllCards.Count > 0)
+					qvm.CurrentCard = qvm.AllCards[0];
+				qw.DataContext = qvm;
+				qw.ShowActivated = true;
+				qw.ShowInTaskbar = true;
+				qw.Show();
+			}
+		}
+		StartQuizViewModelCommand _StartQuizCommand;
+		public System.Windows.Input.ICommand StartQuizCommand
+		{
+			get
+			{
+				if (this._StartQuizCommand == null)
+				{
+					this._StartQuizCommand = new StartQuizViewModelCommand(this);
+				}
+				return this._StartQuizCommand;
 			}
 		}
 		#endregion
@@ -1550,7 +1659,7 @@ namespace Protomeme
 		{
 			public SourceImage()
 			{
-				this.TaggedRegions = new ObservableCollection<TaggedRegion>();
+				this.TaggedRegions = new TaggedRegionCollection();
 				this.TaggedRegions.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler(TaggedRegions_CollectionChanged);
 			}
 
@@ -1562,6 +1671,7 @@ namespace Protomeme
 					Image = this.Image.Clone(),
 					Session = this.Session,
 					Title = this.Title,
+					Tags = this.Tags
 				};
 				foreach (var tr in this.TaggedRegions)
 				{
@@ -1600,9 +1710,24 @@ namespace Protomeme
 				}
 			}
 			#endregion
+			#region Tags (INotifyPropertyChanged Property)
+			private string _Tags;
+			public string Tags
+			{
+				get { return this._Tags; }
+				set
+				{
+					if (value == _Tags)
+						return;
+
+					this._Tags = value;
+					this.OnPropertyChanged("Tags");
+				}
+			}
+			#endregion
 			#region TaggedRegions (INotifyPropertyChanged Property)
-			private ObservableCollection<TaggedRegion> _TaggedRegions;
-			public ObservableCollection<TaggedRegion> TaggedRegions
+			private TaggedRegionCollection _TaggedRegions;
+			public TaggedRegionCollection TaggedRegions
 			{
 				get { return this._TaggedRegions; }
 				set

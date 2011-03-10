@@ -24,45 +24,8 @@ namespace Protomeme
 			InitializeComponent();
 		}
 
-		#region MainWindow Command Base
-		public abstract class MainWindowCommandBase : System.Windows.Input.ICommand
-		{
-			public MainWindowCommandBase(MainWindow viewModel)
-			{
-				this._viewModel = viewModel;
-			}
-			#region MainWindow ViewModel
-			private MainWindow _viewModel;
-			public virtual MainWindow ViewModel
-			{
-				protected get { return this._viewModel; }
-				set { this._viewModel = value; }
-			}
-			#endregion
-
-			#region ICommand Members
-			public virtual bool CanExecute(object parameter)
-			{
-				return (this.ViewModel != null);
-			}
-
-			public virtual event EventHandler CanExecuteChanged;
-
-			protected virtual void OnCanExecuteChanged()
-			{
-				var handler = this.CanExecuteChanged;
-				if (handler == null)
-					return;
-				handler(this, EventArgs.Empty);
-			}
-
-			public abstract void Execute(object parameter);
-
-			#endregion
-		}
-		#endregion
 		#region public ICommand PrintCommand
-		public class PrintMainWindowCommand : MainWindowCommandBase
+		public class PrintMainWindowCommand : ViewModelCommandBase<MainWindow>
 		{
 			public PrintMainWindowCommand(MainWindow viewModel)
 				: base(viewModel)

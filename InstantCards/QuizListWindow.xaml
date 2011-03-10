@@ -1,0 +1,39 @@
+﻿<Window x:Class="Protomeme.QuizListWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="QuizListWindow" Height="300" Width="300">
+    <Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="223*" />
+			<RowDefinition Height="38*" />
+		</Grid.RowDefinitions>
+		<ListBox ItemsSource="{Binding AllCards}">
+			<ListBox.ItemsPanel>
+				<ItemsPanelTemplate>
+					<VirtualizingStackPanel Orientation="Horizontal"/>
+				</ItemsPanelTemplate>
+			</ListBox.ItemsPanel>
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<Border Background="DarkBlue"
+							Margin="10 12"
+							BorderThickness="4"
+							BorderBrush="Gray">
+						<StackPanel>
+							<Label Content="{Binding SourceImage.TaggedRegions[0].ImageUrl}"/>
+					<Image 
+						Source="{Binding SourceImage.TaggedRegions[{Binding CurrentRegionToShow}].Image}"
+						   Stretch="Uniform"
+						   MinWidth="120"
+						   MinHeight="60"
+						   />
+						</StackPanel>
+					</Border>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+		<Button Content="_Flip" Grid.Row="1" Height="23" HorizontalAlignment="Left" Margin="114,3,0,0" Name="button1" VerticalAlignment="Top" Width="75" 
+				Command="{Binding FlipCardCommand}"/>
+		<Label Content="{Binding CurrentRegionToShow}" Grid.Row="1" Height="28" HorizontalAlignment="Left" Margin="0,3,0,0" Name="label1" VerticalAlignment="Top" Width="92" />
+	</Grid>
+</Window>

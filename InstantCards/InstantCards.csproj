@@ -81,12 +81,20 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="BoolToVisibilityConverter.cs" />
+    <Compile Include="QuizListWindow.xaml.cs">
+      <DependentUpon>QuizListWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="QuizWindow.xaml.cs">
+      <DependentUpon>QuizWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ShuffleExtensions.cs" />
     <Compile Include="FlashCard.xaml.cs">
       <DependentUpon>FlashCard.xaml</DependentUpon>
     </Compile>
     <Compile Include="FlashCardPrintPage.xaml.cs">
       <DependentUpon>FlashCardPrintPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="QuizViewModel.cs" />
     <Compile Include="ImageCropper.xaml.cs">
       <DependentUpon>ImageCropper.xaml</DependentUpon>
     </Compile>
@@ -100,6 +108,16 @@
     </Compile>
     <Compile Include="RectExtensions.cs" />
     <Compile Include="ResizingAdorner.cs" />
+    <Compile Include="WatermarkAdorner.cs" />
+    <Compile Include="WatermarkService.cs" />
+    <Page Include="QuizListWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="QuizWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="FlashCard.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -120,7 +138,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="FlashCardMakerModel.cs" />
+    <Compile Include="InstantCardsViewModel.cs" />
     <Compile Include="FlashCardModel.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -180,9 +198,6 @@
     </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="flashcardersdf.sdf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="missing_image.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

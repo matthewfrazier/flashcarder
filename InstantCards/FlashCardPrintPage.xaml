@@ -28,6 +28,7 @@
 			<UniformGrid.Resources>
 				<Style TargetType="Image">
 					<Setter Property="Stretch" Value="Uniform"/>
+					<Setter Property="Margin" Value="0.25in 0.25in 0.25in 0.25in"/>
 					<Setter Property="MaxHeight" Value="2in"/>
 					<Setter Property="HorizontalAlignment" Value="Center"/>
 					<Setter Property="VerticalAlignment" Value="Center"/>
