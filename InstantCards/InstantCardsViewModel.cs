@@ -1233,7 +1233,11 @@ namespace Protomeme
 			}
 			public override void Execute(object parameter)
 			{
-				throw new NotImplementedException();
+				this.ViewModel.Session = new FlashCardSession()
+				{
+					SourceImages = new ObservableCollection<SourceImage>()
+				};
+
 			}
 		}
 		NewSessionViewModelCommand _NewSessionCommand;
@@ -1326,6 +1330,39 @@ namespace Protomeme
 					this._TagSelectedCommand = new TagSelectedViewModelCommand(this);
 				}
 				return this._TagSelectedCommand;
+			}
+		}
+		#endregion
+		#region public ICommand DeletedSelectedSourceImagesViewModelCommand
+		public class DeletedSelectedSourceImagesViewModelCommand : ViewModelCommandBase<InstantCardsViewModel>
+		{
+			public DeletedSelectedSourceImagesViewModelCommand(InstantCardsViewModel viewModel)
+				: base(viewModel)
+			{
+			}
+			public override void Execute(object parameter)
+			{
+				var selobjs = parameter as ICollection<object>;
+				if (selobjs != null)
+				{
+					foreach (SourceImage si in selobjs.ToList())
+					{
+						this.ViewModel.Session.SourceImages.Remove(si);
+					}
+
+				}
+			}
+		}
+		DeletedSelectedSourceImagesViewModelCommand _DeletedSelectedSourceImagesCommand;
+		public System.Windows.Input.ICommand DeletedSelectedSourceImagesCommand
+		{
+			get
+			{
+				if (this._DeletedSelectedSourceImagesCommand == null)
+				{
+					this._DeletedSelectedSourceImagesCommand = new DeletedSelectedSourceImagesViewModelCommand(this);
+				}
+				return this._DeletedSelectedSourceImagesCommand;
 			}
 		}
 		#endregion
@@ -1594,7 +1631,7 @@ namespace Protomeme
 				{
 					case "Session":
 					case "ImageUrl":
-						if (this.Image == null)
+						if (this.Image == null && this.ImageUrl != null)
 						{
 							this.TryLoadImage(this.ImageUrl);
 						}

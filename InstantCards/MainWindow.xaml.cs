@@ -91,10 +91,14 @@ namespace Protomeme
 					this.Model.OpenSessionCommand.Execute(ses);
 				}
 
-				if(print)
+				if (print)
 				{
 					this.PrintCommand.Execute(null);
 				}
+			}
+			else
+			{
+				this.Model.NewSessionCommand.Execute(null);
 			}
 		}
 		#endregion

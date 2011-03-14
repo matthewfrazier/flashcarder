@@ -136,6 +136,11 @@
 							<MenuItem Header="Duplicate"
 								  Command="{Binding CloneSourceImageCommand}"
 								  CommandParameter="{Binding SelectedSourceImage}"/>
+							<MenuItem Header="Delete"
+								  Command="{Binding DeletedSelectedSourceImagesCommand}"
+								  CommandParameter="{Binding 
+    Path=PlacementTarget.SelectedItems, 
+    RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}"/>
 							<Separator/>
 							<MenuItem Header="Tag" 
 									  Command="{Binding TagSelectedCommand}"
