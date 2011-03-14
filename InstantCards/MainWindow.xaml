@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Protomeme"
         xmlns:dap="clr-namespace:DAP.Adorners;assembly=CroppingAdorner"
-        Title="Instant Flash Cards" Height="692" Width="1117"
+        Title="Instant Flash Cards" Height="724" Width="1019"
         Loaded="Window_Loaded"
 		x:Name="mainWindow"
         >
@@ -81,7 +81,7 @@
 			<GridSplitter Grid.Column="0" Width="5" VerticalAlignment="Stretch" HorizontalAlignment="Right"/>
 			<Grid Name="grid3" Grid.Column="2" Margin="0,6,6,0">
 				<Grid.RowDefinitions>
-					<RowDefinition Height="180*" />
+					<RowDefinition Height="200*" />
 					<RowDefinition Height="380*" />
 				</Grid.RowDefinitions>
 
@@ -103,7 +103,9 @@
 				<ListView ItemsSource="{Binding SelectedSourceImage.TaggedRegions}" SelectedItem="{Binding SelectedTaggedRegion}" Margin="7,6,2,10">
 					<ListView.ItemsPanel>
 						<ItemsPanelTemplate>
-							<WrapPanel Width="{Binding (FrameworkElement.ActualWidth), RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}" ItemWidth="{Binding (ListView.View).ItemWidth, RelativeSource={RelativeSource AncestorType=ListView}}" ItemHeight="{Binding (ListView.View).ItemHeight, RelativeSource={RelativeSource AncestorType=ListView}}" />
+							<WrapPanel 
+								Orientation="Horizontal"
+								Width="{Binding (FrameworkElement.ActualWidth), RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}" ItemWidth="{Binding (ListView.View).ItemWidth, RelativeSource={RelativeSource AncestorType=ListView}}" ItemHeight="{Binding (ListView.View).ItemHeight, RelativeSource={RelativeSource AncestorType=ListView}}" />
 						</ItemsPanelTemplate>
 					</ListView.ItemsPanel>
 					<ListView.ItemTemplate>
@@ -122,22 +124,25 @@
 				
 			</Grid>
 			
-			<StackPanel>
+			<StackPanel Margin="0,0,0,1">
 				<TextBox>
 					<local:WatermarkService.Watermark>
 						<TextBlock>Enter tags to filter</TextBlock>
 					</local:WatermarkService.Watermark>
 				</TextBox>
-					<ListView x:Name="sourceImageListView" ItemsSource="{Binding Session.SourceImages}" SelectedItem="{Binding SelectedSourceImage}" Margin="6,6,16,7">
+					<ListView x:Name="sourceImageListView" ItemsSource="{Binding Session.SourceImages}" SelectedItem="{Binding SelectedSourceImage}" Margin="6,6,16,7" Height="576">
 						<ListView.ContextMenu>
 					<ContextMenu>
 							<MenuItem Header="Duplicate"
 								  Command="{Binding CloneSourceImageCommand}"
 								  CommandParameter="{Binding SelectedSourceImage}"/>
 							<Separator/>
-							<MenuItem Header="Tag" ItemsSource="{Binding AllTags}"
+							<MenuItem Header="Tag" 
 									  Command="{Binding TagSelectedCommand}"
-									  CommandParameter="{Binding}"/>
+									  CommandParameter="{Binding}"
+									  ItemsSource="{Binding AllTags}">
+								
+							</MenuItem>
 							<MenuItem>
 								<TextBox HorizontalAlignment="Stretch">
 									<local:WatermarkService.Watermark>

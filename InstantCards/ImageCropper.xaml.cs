@@ -47,8 +47,7 @@ namespace Protomeme
 		protected virtual void OnSourceChanged(DependencyPropertyChangedEventArgs e)
 		{
 			this.imageToCrop.Source = e.NewValue as ImageSource;
-			// add other initialization and cleanup code that is
-			// required by your control when changing the image source
+			ApplyCroppedBounds(this.croppingAdorner);
 		}
 
 		public Int32Rect CroppedImageBounds
@@ -78,21 +77,13 @@ namespace Protomeme
 
 		protected virtual void OnCroppedImageBoundsChanged(DependencyPropertyChangedEventArgs e)
 		{
-			this.CroppedImageBounds = (Int32Rect)e.NewValue;
-			
-			// add other initialization and cleanup code that is
-			// required by your control when changing the image source
-			if (e.OldValue != e.NewValue)
-			{
-				ApplyCroppedBounds(this.croppingAdorner);
-			}
+			ApplyCroppedBounds(this.croppingAdorner);
 		}
 
 		protected virtual void InitCropping()
 		{
 			AddCropToElement(this.imageToCrop);
 			originalBrush = croppingAdorner.Fill;
-			ReportCroppedBounds(this.croppingAdorner);
 		}
 
 		private void AddCropToElement(FrameworkElement fel)
@@ -131,66 +122,65 @@ namespace Protomeme
 			}
 		}
 
+		Int32Rect CropperToImage(Rect rc)
+		{
+			double imageWidth = this.imageToCrop.Source.Width;
+			double imageHeight = this.imageToCrop.Source.Height;
+			double xscale = imageWidth / this.croppingAdorner.ActualWidth;
+			double yscale = imageHeight / this.croppingAdorner.ActualHeight;
+
+			int newLeft = (int)Math.Round(rc.Left * xscale);
+			int newTop = (int)Math.Round(rc.Top * yscale);
+			int newWidth = (int)Math.Round(rc.Width * xscale);
+			int newHeight = (int)Math.Round(rc.Height * yscale);
+			return new Int32Rect(
+				newLeft,
+				newTop,
+				newWidth,
+				newHeight
+				);
+		}
+
+		Rect ImageToCropper(Int32Rect rc)
+		{
+			double imageWidth = this.imageToCrop.Source.Width;
+			double imageHeight = this.imageToCrop.Source.Height;
+			double xscale = this.croppingAdorner.ActualWidth / imageWidth;
+			double yscale = this.croppingAdorner.ActualHeight/ imageHeight;
+
+			double newLeft = rc.X * xscale;
+			double newTop = rc.Y * yscale;
+			double newWidth = rc.Width * xscale;
+			double newHeight = rc.Height * yscale;
+
+			return new Rect(
+				newLeft, newTop, newWidth, newHeight);
+		}
+
 		protected virtual void ApplyCroppedBounds(CroppingAdorner ca)
 		{
 			if (ca == null)
 				return;
-			Rect rc = ca.ClippingRectangle;
-
 			if (this.imageToCrop.Source != null)
 			{
-				double imageWidth = this.imageToCrop.Source.Width;
-				double imageHeight = this.imageToCrop.Source.Height;
-
-				double xscale = ca.ActualWidth / imageWidth;
-				double yscale = ca.ActualHeight / imageHeight;
-
-				double newLeft = rc.Left * xscale;
-				double newTop = rc.Top * yscale;
-				double newWidth = rc.Width * xscale;
-				double newHeight = rc.Height * yscale;
-
-				ca.ClippingRectangle = new Rect(
-					newLeft, newTop, newWidth, newHeight);
+				ca.ClippingRectangle = ImageToCropper(this.CroppedImageBounds);
+				ca.InvalidateVisual();
 			}
-
 		}
 
 		protected virtual void ReportCroppedBounds(CroppingAdorner ca)
 		{
 			if (ca == null)
 				return;
-			Rect rc = ca.ClippingRectangle;
-			//TODO: this is the rect in screen coords, need to convert them back to image coords
-
 			if (this.imageToCrop.Source != null)
 			{
-				var bs = this.imageToCrop.Source as BitmapSource;
-				if (bs != null)
-				{
-					double imageWidth = bs.PixelWidth;
-					double imageHeight = bs.PixelHeight;
-
-					double xscale = imageWidth / ca.ActualWidth;
-					double yscale = imageHeight / ca.ActualHeight;
-
-					int newLeft = (int)Math.Round(rc.Left * xscale);
-					int newTop = (int)Math.Round(rc.Top * yscale);
-					int newWidth = (int)Math.Round(rc.Width * xscale);
-					int newHeight = (int)Math.Round(rc.Height * yscale);
-					this.CroppedImageBounds = new Int32Rect(
-						newLeft,
-						newTop,
-						newWidth,
-						newHeight
-						);
-				}
+				this.CroppedImageBounds = CropperToImage(ca.ClippingRectangle);
 			}
 		}
 
 		private void CropChanged(Object sender, RoutedEventArgs rea)
 		{
-			ReportCroppedBounds(sender as CroppingAdorner);
+			ReportCroppedBounds(this.croppingAdorner);
 		}
 
 		private void UserControl_SizeChanged(object sender, SizeChangedEventArgs e)

@@ -263,6 +263,53 @@ namespace Protomeme
 				}
 			}
 			#endregion
+
+			#region LabelBackground (INotifyPropertyChanged Property)
+			private Brush _LabelBackground;
+			public Brush LabelBackground
+			{
+				get { return this._LabelBackground; }
+				set
+				{
+					if (value == _LabelBackground)
+						return;
+
+					this._LabelBackground = value;
+					this.OnPropertyChanged("LabelBackground");
+				}
+			}
+			#endregion
+			#region LabelForeground (INotifyPropertyChanged Property)
+			private Brush _LabelForeground;
+			public Brush LabelForeground
+			{
+				get { return this._LabelForeground; }
+				set
+				{
+					if (value == _LabelForeground)
+						return;
+
+					this._LabelForeground = value;
+					this.OnPropertyChanged("LabelForeground");
+				}
+			}
+			#endregion
+			#region ImageVerticalAlignment (INotifyPropertyChanged Property)
+			private VerticalAlignment _ImageVerticalAlignment;
+			public VerticalAlignment ImageVerticalAlignment
+			{
+				get { return this._ImageVerticalAlignment; }
+				set
+				{
+					if (value == _ImageVerticalAlignment)
+						return;
+
+					this._ImageVerticalAlignment = value;
+					this.OnPropertyChanged("ImageVerticalAlignment");
+				}
+			}
+			#endregion
+			
 			public PageInfo()
 			{
 
@@ -286,7 +333,7 @@ namespace Protomeme
 					this.CardsOnPage.Add(new CardViewModel()
 					{
 						Image = tr.Image.Clone(),
-						Header = tr.Identifier
+						Header = tr.Identifier,
 					});
 				}
 			}
@@ -384,8 +431,8 @@ namespace Protomeme
 				}
 				#endregion
 				#region Header (INotifyPropertyChanged Property)
-				private string _Header;
-				public string Header
+				private object _Header;
+				public object Header
 				{
 					get { return this._Header; }
 					set
@@ -395,6 +442,21 @@ namespace Protomeme
 
 						this._Header = value;
 						this.OnPropertyChanged("Header");
+					}
+				}
+				#endregion
+				#region Tags (INotifyPropertyChanged Property)
+				private InstantCardsViewModel.TagViewModelCollection _Tags;
+				public InstantCardsViewModel.TagViewModelCollection Tags
+				{
+					get { return this._Tags; }
+					set
+					{
+						if (value == _Tags)
+							return;
+
+						this._Tags = value;
+						this.OnPropertyChanged("Tags");
 					}
 				}
 				#endregion

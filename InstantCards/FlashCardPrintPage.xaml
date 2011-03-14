@@ -26,6 +26,9 @@
 		
 		<UniformGrid Rows="4" Columns="2" Width="8.5in" Height="11in" FlowDirection="{Binding Direction}">
 			<UniformGrid.Resources>
+				<Style TargetType="DockPanel">
+					<Setter Property="VerticalAlignment" Value="Top"/>
+				</Style>
 				<Style TargetType="Image">
 					<Setter Property="Stretch" Value="Uniform"/>
 					<Setter Property="Margin" Value="0.25in 0.25in 0.25in 0.25in"/>
@@ -33,6 +36,7 @@
 					<Setter Property="HorizontalAlignment" Value="Center"/>
 					<Setter Property="VerticalAlignment" Value="Center"/>
 					<Setter Property="FlowDirection" Value="LeftToRight"/>
+					<Setter Property="VerticalAlignment" Value="{Binding ImageVerticalAlignment}"/>
 				</Style>
 				<Style TargetType="Border">
 					<Setter Property="BorderThickness" Value="{Binding BorderThickness}"/>
@@ -40,12 +44,20 @@
 					<Setter Property="Padding" Value="4,4,4,4"/>
 				</Style>
 				<Style TargetType="Label">
-					<Setter Property="DockPanel.Dock" Value="Bottom"/>
-					<Setter Property="Foreground" Value="Gray"/>
+					<Setter Property="DockPanel.Dock" Value="Top"/>
+					<Setter Property="Foreground" Value="{Binding LabelForeground}"/>
+					<Setter Property="Background" Value="{Binding LabelBackground}"/>
 				</Style>
 			</UniformGrid.Resources>
-			<Border >
+			<Border>
 				<DockPanel DataContext="{Binding CardsOnPage[0]}">
+					<ListBox ItemsSource="{Binding Tags}">
+						<ListBox.ItemsPanel>
+							<ItemsPanelTemplate>
+								<StackPanel Orientation="Horizontal"/>
+							</ItemsPanelTemplate>
+						</ListBox.ItemsPanel>
+					</ListBox>
 					<Label Content="{Binding Header}"/>
 					<Image Source="{Binding Image}"/>
 				</DockPanel>
