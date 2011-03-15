@@ -1,0 +1,26 @@
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\Window1.baml
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\Window1.g.cs
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\App.g.cs
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo_MarkupCompile.cache
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo.g.resources
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo.Properties.Resources.resources
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo.csproj.GenerateResource.Cache
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\bin\Debug\SelectedItemsBindingDemo.exe
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\bin\Debug\SelectedItemsBindingDemo.pdb
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo.exe
+C:\Documents and Settings\sam.jack\My Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo.pdb
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo.exe
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo.pdb
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\App.g.cs
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo_MarkupCompile.cache
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\Window1.g.cs
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\GeneratedInternalTypeHelper.g.cs
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo_MarkupCompile.lref
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\bin\Debug\SelectedItemsBindingDemo.exe
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\bin\Debug\SelectedItemsBindingDemo.pdb
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\Window1.baml
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo.g.resources
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo.Properties.Resources.resources
+C:\Users\Sam\Documents\Visual Studio 2008\Projects\SelectedItemsBindingDemo\SelectedItemsBindingDemo\obj\Debug\SelectedItemsBindingDemo.csproj.GenerateResource.Cache

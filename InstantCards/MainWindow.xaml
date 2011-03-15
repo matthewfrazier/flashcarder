@@ -130,7 +130,8 @@
 						<TextBlock>Enter tags to filter</TextBlock>
 					</local:WatermarkService.Watermark>
 				</TextBox>
-					<ListView x:Name="sourceImageListView" ItemsSource="{Binding Session.SourceImages}" SelectedItem="{Binding SelectedSourceImage}" Margin="6,6,16,7" Height="576">
+					<ListView x:Name="sourceImageListView" ItemsSource="{Binding Session.SourceImages}" SelectedItem="{Binding SelectedSourceImage}" Margin="6,6,16,7" Height="576"
+							  >
 						<ListView.ContextMenu>
 					<ContextMenu>
 							<MenuItem Header="Duplicate"
@@ -140,21 +141,33 @@
 								  Command="{Binding DeletedSelectedSourceImagesCommand}"
 								  CommandParameter="{Binding 
     Path=PlacementTarget.SelectedItems, 
-    RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}"/>
+    RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}
+								}"/>
 							<Separator/>
 							<MenuItem Header="Tag" 
 									  Command="{Binding TagSelectedCommand}"
-									  CommandParameter="{Binding}"
-									  ItemsSource="{Binding AllTags}">
-								
+									  CommandParameter="{Binding
+    Path=PlacementTarget.SelectedItems, 
+    RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}
+								}"
+									  ItemsSource="{Binding AllTags
+								}"
+									  >
+								<MenuItem.Resources>
+									<Style TargetType="MenuItem">
+										<Setter Property="Command" Value="{Binding 
+											    Path=PlacementTarget.DataContext.TagSelectedCommand, 
+    RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}
+											
+											}"/>
+										<Setter Property="CommandParameter" Value="{Binding 
+											    Path=PlacementTarget.SelectedItems, 
+    RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}
+											}"/>
+									</Style>
+								</MenuItem.Resources>
 							</MenuItem>
-							<MenuItem>
-								<TextBox HorizontalAlignment="Stretch">
-									<local:WatermarkService.Watermark>
-										<TextBlock>Add new tag...</TextBlock>
-									</local:WatermarkService.Watermark>
-								</TextBox>
-							</MenuItem>
+							
 						</ContextMenu>
 				</ListView.ContextMenu>
 				<ListView.View>
